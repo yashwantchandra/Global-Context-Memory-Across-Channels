@@ -154,6 +154,27 @@ Sources: [Models](https://docs.sarvam.ai/api/getting-started/models) · [API ref
 - Our endpoint must be reachable over public HTTPS. If it sits behind a firewall, allowlist Sarvam's IP `4.213.167.70`. Auth options are none, bearer, api_key or basic.
 - Not documented, so test on Day 1: the exact hook payload schema, hook timeout, variable size limits, and whether the WhatsApp channel fires the same hooks.
 
+**Sarvam Voice Agents MCP server (checked 9 Oct)**: [docs](https://docs.sarvam.ai/conversations/mcp)
+
+This is a **dev-time tool, not part of the runtime.** It lets Claude Code configure and test the hosted agent, but our app doesn't use it at runtime. It has **no per-user memory or context tool**, so it doesn't replace our context layer.
+
+- **Setup:**
+  - Add it with `claude mcp add --transport http --scope project sarvam-voice-agents https://mcp.sarvam.ai/voice-agents`.
+  - Then `/mcp` → Authenticate (Sarvam SSO). The token lasts 24 h with no refresh, so sign in daily.
+- **Useful tools:**
+  - `configure_agent`: create or update the prompt, input/output variables and voice. Changes go to a draft until `commit`.
+  - `place_test_call` (needs `verify_phone_number` first): places a test call.
+  - `send_chat`: tests the agent in chat.
+  - `analytics`: transcripts and interaction traces.
+  - `evals` with `configure_scenario` and `run_eval`: automated "resumed without re-asking" tests.
+- **Limits:**
+  - 120 calls a minute.
+  - Lists are replaced whole on write.
+  - `commit`, `place_test_call` and `delete_*` can't be undone or cost money.
+  - `upload_agent_code` (server-side hooks and state) is enterprise-only.
+- **Confirms our local-only design:** Sarvam **refuses tool URLs that resolve to internal or private addresses**, so a hosted hook could never reach a laptop on the office network.
+- **Data caution:** transcripts read through this MCP go into Claude's context. Only use it on role-play or synthetic sessions, never real customer conversations.
+
 - **Which path to use:** the hosted Voice Agents (indus.sarvam.ai) give us telephony, WhatsApp and hooks with no extra work, so they are the default. Fall back to LiveKit only if we need full control of the pipeline or have to measure latency ourselves.
 
 These organiser resources were still "to be shared" as of 8 Oct: the starter API list, sample GLIDs, sample voice and WhatsApp conversations, and the current bot prompt. Add their locations here once they arrive.
