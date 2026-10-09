@@ -3,3 +3,8 @@
 __pycache__/
 *.pyc
 .DS_Store
+
+# Real IndiaMART customer data: must never leave the premises (hackathon rule). Keep local only.
+Global Context - Seller Dataset/*.csv
+Global_Context_Problem_Statement_Buyer Side*.csv
+data/
