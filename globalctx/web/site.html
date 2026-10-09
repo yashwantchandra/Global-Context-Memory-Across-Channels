@@ -1,0 +1,209 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Global Context</title>
+<style>
+:root{--bg:#f4f5fb;--card:#fff;--ink:#151a2d;--sub:#5b6178;--line:#e6e8f2;--brand:#3b3fd8;--brand2:#7b5cff;
+  --amber:#b45309;--amber-bg:#fff4e0;--green:#0f7a4f;--green-bg:#e3f6ed;--slate-bg:#eef0f6}
+*{box-sizing:border-box} html,body{margin:0;height:100%}
+body{font:14.5px/1.45 "Inter","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;background:var(--bg);color:var(--ink);
+  display:grid;grid-template-rows:auto 1fr;height:100vh}
+header{display:flex;align-items:center;gap:14px;padding:12px 20px;background:linear-gradient(120deg,var(--brand),var(--brand2));color:#fff}
+header .logo{width:30px;height:30px;border-radius:9px;background:rgba(255,255,255,.2);display:grid;place-items:center;font-weight:800}
+header b{font-size:16px} header .sub{opacity:.85;font-size:12.5px}
+header .right{margin-left:auto;display:flex;gap:10px;align-items:center;font-size:12.5px}
+header .live{background:rgba(255,255,255,.18);border-radius:99px;padding:3px 10px}
+.shell{display:grid;grid-template-columns:330px 1fr;min-height:0}
+aside{background:var(--card);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.search{padding:14px 14px 8px}
+.search input{width:100%;padding:9px 12px;border:1px solid var(--line);border-radius:10px;font:inherit;background:#fafbff}
+.filters{display:flex;gap:6px;padding:0 14px 10px;flex-wrap:wrap}
+.filters button{white-space:nowrap}
+.filters button{border:1px solid var(--line);background:#fff;border-radius:99px;padding:4px 11px;font:inherit;font-size:12.5px;cursor:pointer;color:var(--sub)}
+.filters button.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.list{overflow:auto;padding:0 8px 12px;flex:1}
+.grp{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);padding:12px 8px 6px}
+.item{display:grid;grid-template-columns:36px 1fr auto;gap:10px;align-items:center;padding:9px 8px;border-radius:12px;cursor:pointer}
+.item:hover{background:#f6f6fd} .item.on{background:#eceaff}
+.av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-weight:700;color:#fff}
+.item .n{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .m{font-size:12px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badges{display:flex;flex-direction:column;gap:3px;align-items:flex-end}
+.b{font-size:11px;border-radius:99px;padding:1px 7px;font-weight:600;white-space:nowrap}
+.b.t{background:var(--amber-bg);color:var(--amber)} .b.r{background:var(--green-bg);color:var(--green)} .b.c{background:var(--slate-bg);color:var(--sub)}
+.newglid{border-top:1px solid var(--line);padding:12px 14px;display:flex;gap:8px}
+.newglid input{flex:1;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:9px;font:inherit}
+.newglid button{flex:none}
+.newglid button,.act{border:0;background:var(--brand);color:#fff;border-radius:9px;padding:8px 12px;font:inherit;font-weight:600;cursor:pointer}
+main{display:grid;grid-template-rows:auto 1fr;min-height:0}
+.tabs{display:flex;gap:4px;align-items:center;padding:10px 18px 0;background:var(--bg)}
+.tab{border:0;background:transparent;padding:9px 14px;border-radius:10px 10px 0 0;font:inherit;font-weight:600;color:var(--sub);cursor:pointer}
+.tab.on{background:var(--card);color:var(--ink);box-shadow:0 -1px 0 var(--line) inset}
+.tabs .who{margin-left:auto;font-size:12.5px;color:var(--sub);display:flex;gap:8px;align-items:center}
+.act.ghost{background:#fff;color:var(--brand);border:1px solid #d9dcff}
+.pane{background:var(--card);border-top:1px solid var(--line);min-height:0;overflow:auto}
+iframe{border:0;width:100%;height:100%;display:block}
+pre{margin:0;padding:22px 26px;font:12.8px/1.6 ui-monospace,Menlo,monospace;white-space:pre-wrap}
+.wrap{padding:22px 26px}
+table{width:100%;border-collapse:collapse;font-size:13.5px} th,td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:left} th{color:var(--sub);font-weight:500}
+.ok{color:var(--green);font-weight:700} .warn{color:var(--amber);font-weight:700}
+.card{border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin-bottom:16px}
+.card h3{margin:0 0 12px;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--sub)}
+.reqlink{display:inline-block;margin:3px 6px 3px 0;padding:4px 10px;border-radius:99px;background:var(--slate-bg);color:var(--ink);text-decoration:none;font-size:12.5px}
+.empty{color:var(--sub);padding:40px;text-align:center}
+.callbtn{border:0;background:#0f7a4f;color:#fff;border-radius:9px;padding:8px 14px;font:inherit;font-weight:700;cursor:pointer}
+.modal{position:fixed;inset:0;background:rgba(21,26,45,.35);display:none;place-items:center;z-index:5}
+.modal.on{display:grid}
+.sheet{background:#fff;border-radius:18px;padding:22px 24px;width:min(460px,92vw);box-shadow:0 30px 80px -20px rgba(0,0,0,.35)}
+.sheet h3{margin:0 0 4px;font-size:18px} .sheet .sub{color:var(--sub);font-size:13px;margin-bottom:16px}
+.sheet label{font-size:12px;color:var(--sub);text-transform:uppercase;letter-spacing:.06em}
+.sheet .row{display:flex;gap:8px;margin:6px 0 14px}
+.sheet input{flex:1;min-width:0;padding:10px 12px;border:1px solid var(--line);border-radius:10px;font:inherit}
+.sheet .note{font-size:12.5px;color:var(--sub);background:#f7f8fc;border-radius:10px;padding:10px 12px;margin-top:12px}
+.sheet .status{margin-top:12px;font-weight:600}
+.big-call{width:100%;padding:12px;font-size:15px}
+.toast{position:fixed;right:18px;bottom:18px;background:#151a2d;color:#fff;padding:10px 14px;border-radius:12px;font-size:13px;opacity:0;transition:.3s}
+.toast.show{opacity:1}
+</style></head><body>
+<header><div class="logo">G</div><div><b>Global Context</b> <span class="sub">· Memory across channels · PS02</span></div>
+  <div class="right"><span class="live" id="live">local only · no customer data leaves this laptop</span></div></header>
+<div class="shell">
+  <aside>
+    <div class="search"><input id="q" placeholder="Search name, GLID, city…"></div>
+    <div class="filters"><button data-f="all" class="on">All</button><button data-f="seller">Sellers</button><button data-f="buyer">Buyers</button><button data-f="open">Open threads</button></div>
+    <div class="list" id="list"></div>
+    <div class="newglid"><input id="newg" placeholder="Open any GLID…"><button onclick="openNew()">Open</button></div>
+  </aside>
+  <main>
+    <div class="tabs" id="tabs">
+      <button class="tab" data-t="view">360 view</button>
+      <button class="tab" data-t="chat">Chat</button>
+      <button class="tab" data-t="file">File (.md)</button>
+      <button class="tab" data-t="activity">Activity</button>
+      <div class="who" id="who"></div>
+    </div>
+    <div class="pane" id="pane"><div class="empty">Pick a buyer or seller on the left</div></div>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+<div class="modal" id="callModal" onclick="if(event.target===this)closeCall()"><div class="sheet">
+  <h3 id="callTitle">Call</h3><div class="sub" id="callSub"></div>
+  <label>Phone number for this GLID</label>
+  <div class="row"><input id="callPhone" placeholder="+91XXXXXXXXXX"><button class="act ghost" onclick="savePhone()">Save</button></div>
+  <button class="callbtn big-call" onclick="placeCall()">📞 Call now with this person's context</button>
+  <div class="status" id="callStatus"></div>
+  <div class="note" id="callNote"></div>
+</div></div>
+<script>
+let all = [], cur = null, tab = 'view', filt = 'all';
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const COL = ['#3b3fd8','#7b5cff','#0c7a86','#b45309','#0f7a4f','#1d5fd1','#b42318','#475069'];
+const colOf = g => COL[[...g].reduce((a, c) => a + c.charCodeAt(0), 0) % COL.length];
+function toast(t){ $('toast').textContent = t; $('toast').classList.add('show'); setTimeout(() => $('toast').classList.remove('show'), 2600); }
+
+async function loadList(){
+  all = await (await fetch('/api/glids')).json();
+  renderList();
+}
+function renderList(){
+  const q = $('q').value.trim().toLowerCase();
+  const rows = all.filter(r => (filt === 'all' || r.role === filt || (filt === 'open' && r.open_threads))
+    && (!q || `${r.name} ${r.business} ${r.glid}`.toLowerCase().includes(q)));
+  const groups = [['Cases & demo', rows.filter(r => r.tag === 'case')],
+                  ['Sellers', rows.filter(r => r.role === 'seller' && r.tag !== 'case')],
+                  ['Buyers', rows.filter(r => r.role === 'buyer' && r.tag !== 'case')]];
+  $('list').innerHTML = groups.filter(g => g[1].length).map(([title, items]) =>
+    `<div class="grp">${title} · ${items.length}</div>` + items.map(r => `
+      <div class="item ${cur && cur.glid === r.glid ? 'on' : ''}" onclick="pick('${r.glid}')">
+        <div class="av" style="background:${colOf(r.glid)}">${esc((r.name || '?')[0])}</div>
+        <div><div class="n">${esc(r.name)}</div><div class="m">${r.role} · ${esc(r.glid)}${r.business ? ' · ' + esc(r.business) : ''}</div></div>
+        <div class="badges">${r.open_threads ? `<span class="b t">${r.open_threads} open</span>` : ''}
+          ${r.pending_requests ? `<span class="b r">${r.pending_requests} req</span>` : ''}${r.cold ? '<span class="b c">new</span>' : ''}</div>
+      </div>`).join('')).join('') || '<div class="empty">No match</div>';
+}
+function pick(glid, t){
+  cur = all.find(r => r.glid === glid) || {glid, role: null, name: glid};
+  if (t) tab = t;
+  location.hash = `${glid}/${tab}`;
+  renderList(); show();
+}
+function openNew(){ const g = $('newg').value.trim(); if (g) { fetch(`/api/resolve/${g}`).then(() => pick(g, 'view')); setTimeout(loadList, 1500); } }
+async function show(){
+  document.querySelectorAll('.tab').forEach(b => b.classList.toggle('on', b.dataset.t === tab));
+  if (tab === 'activity') return activity();
+  if (!cur) { $('pane').innerHTML = '<div class="empty">Pick a buyer or seller on the left</div>'; $('who').innerHTML = ''; return; }
+  const role = cur.role || (await (await fetch(`/api/resolve/${cur.glid}`)).json()).role;
+  $('who').innerHTML = `<span>${esc(cur.name)} · ${role} ${esc(cur.glid)}</span>
+    <button class="act ghost" onclick="simulate('${role}','${cur.glid}')">+ new activity</button>
+    <button class="callbtn" onclick="openCall()">📞 Call</button>`;
+  if (tab === 'view') $('pane').innerHTML = `<iframe src="/view/${cur.glid}?embed=1"></iframe>`;
+  if (tab === 'chat') $('pane').innerHTML = `<iframe src="/chat/${role}/${cur.glid}?embed=1"></iframe>`;
+  if (tab === 'file') {
+    const md = await (await fetch(`/api/profile/${role}/${cur.glid}`)).text();
+    $('pane').innerHTML = `<pre>${esc(md)}</pre>`;
+  }
+}
+async function simulate(role, glid){
+  const r = await (await fetch('/api/events', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({glid, role, source:'preset'})})).json();
+  toast(`New ${role === 'seller' ? 'buyer enquiry' : 'buy requirement'} (synthetic) → file updated in ${r.freshness_ms} ms`);
+  setTimeout(() => { show(); loadList(); }, 900);
+}
+async function openCall(){
+  if (!cur) return;
+  const d = await (await fetch(`/api/phone/${cur.glid}`)).json();
+  $('callTitle').textContent = `Call ${cur.name}`;
+  $('callSub').textContent = `${cur.role || ''} · GLID ${cur.glid} · Vani loads this person's file before speaking`;
+  $('callPhone').value = d.phone || '';
+  $('callStatus').textContent = '';
+  const poll = d.poller && d.poller.running ? `Result poller running${d.poller.last_error ? ' (last error: ' + d.poller.last_error + ')' : ''}: the call is written back to the file automatically.`
+                                           : 'Result poller not running (needs SARVAM_AGENTS_API_KEY).';
+  $('callNote').innerHTML = (d.mode === 'dial'
+    ? '<b>Live dialing</b> via Sarvam instant outbound, with this file passed in for the call.'
+    : '<b>No telephony connection on the workspace yet</b>, so the call is <b>queued</b>. Ask Claude to “call the queue” and it is placed with this file loaded. Add SARVAM_CONNECTION_ID and SARVAM_AGENT_NUMBER to .env for one-click dialing.') + '<br><br>' + poll;
+  $('callModal').classList.add('on');
+}
+function closeCall(){ $('callModal').classList.remove('on'); }
+async function savePhone(){
+  const phone = $('callPhone').value.trim(); if (!phone) return;
+  const r = await (await fetch(`/api/phone/${cur.glid}`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({phone})})).json();
+  $('callStatus').textContent = `Saved: ${r.phone} → GLID ${cur.glid}`;
+}
+async function placeCall(){
+  if ($('callPhone').value.trim()) await savePhone();
+  const res = await fetch(`/api/call/${cur.glid}`, {method:'POST'});
+  const r = await res.json();
+  if (!res.ok) { $('callStatus').textContent = r.detail || 'Could not place the call'; return; }
+  $('callStatus').innerHTML = r.status === 'dialing' ? `📞 Dialing ${r.phone}… answer the phone`
+    : `🕒 Queued call to ${r.phone} (${r.queue} in queue). Ask Claude: “call the queue”.`;
+  toast(r.status === 'dialing' ? 'Dialing…' : 'Call queued');
+}
+async function activity(){
+  $('who').innerHTML = '';
+  const [rows, reqs] = await Promise.all([(await fetch('/api/freshness?limit=40')).json(), (await fetch('/api/requests')).json()]);
+  const name = g => (all.find(r => r.glid === g) || {}).name || g;
+  const q = await (await fetch('/api/call-queue')).json();
+  $('pane').innerHTML = `<div class="wrap">
+    <div class="card"><h3>Call queue</h3>${q.length ? '<table><tr><th>Who</th><th>Phone</th><th>Queued at</th></tr>' + q.map(c =>
+      `<tr><td>${esc(name(c.glid))} <span style="color:var(--sub)">${esc(c.role)} ${esc(c.glid)}</span></td><td>${esc(c.phone)}</td><td>${esc(c.at.slice(11,19))}</td></tr>`).join('') + '</table>'
+      : '<span style="color:var(--sub)">No calls waiting</span>'}</div>
+    <div class="card"><h3>Requests raised on our channels (one .md per GLID per folder)</h3>
+      ${Object.entries(reqs).map(([f, gl]) => `<div style="margin-bottom:8px"><b>${esc(f)}/</b> ` + (gl.length ? gl.map(g =>
+        `<a class="reqlink" target="_blank" href="/api/requests/${f}/${g}">${esc(name(g))} · ${g}.md</a>`).join('') : '<span style="color:var(--sub)">empty</span>') + '</div>').join('')}</div>
+    <div class="card"><h3>Freshness log · new activity → file updated</h3><table>
+      <tr><th>When</th><th>Who</th><th>Trigger</th><th>Pass</th><th>Freshness</th><th>File size</th><th>Opening</th></tr>
+      ${rows.map(r => `<tr><td>${esc(r.generated_at.slice(11, 19))}</td><td>${esc(name(r.glid))} <span style="color:var(--sub)">${esc(r.role)}</span></td>
+        <td>${esc(r.trigger_source)}</td><td>${esc(r.stage)}</td><td class="${+r.freshness_ms < 2000 ? 'ok' : 'warn'}">${esc(r.freshness_ms)} ms</td>
+        <td>${esc(r.chars)} chars</td><td>${esc(r.opening_by)}</td></tr>`).join('')}</table></div></div>`;
+}
+document.querySelectorAll('.tab').forEach(b => b.onclick = () => { tab = b.dataset.t; if (cur) location.hash = `${cur.glid}/${tab}`; show(); });
+document.querySelectorAll('.filters button').forEach(b => b.onclick = () => {
+  filt = b.dataset.f; document.querySelectorAll('.filters button').forEach(x => x.classList.toggle('on', x === b)); renderList(); });
+$('q').oninput = renderList;
+$('newg').onkeydown = e => { if (e.key === 'Enter') openNew(); };
+(async () => {
+  await loadList();
+  const [g, t] = location.hash.slice(1).split('/');
+  if (g) pick(g, t || 'view'); else if (all.length) pick((all.find(r => r.tag === 'case') || all[0]).glid, 'view');
+  setInterval(loadList, 15000);
+})();
+</script></body></html>

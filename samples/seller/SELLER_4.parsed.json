@@ -2,9 +2,9 @@
   "meta": {
     "glid": "SELLER_4",
     "role": "seller",
-    "generated_at": "2026-10-09T17:58:38.823",
-    "last_event_at": "2026-10-09T17:58:38.348",
-    "freshness_ms": "474",
+    "generated_at": "2026-10-09T18:34:00.319",
+    "last_event_at": "2026-10-09T18:33:59.711",
+    "freshness_ms": "607",
     "data_quality": "ok",
     "synthetic": "true",
     "sources": "[buyer_calls, buyleads, enquiries, exec_calls, profile, sessions, vani_calls, whatsapp]",
@@ -20,7 +20,7 @@
       "Categories: 3 Ply Face Mask, ABIDA Basmati Rice, Ajwain · free listing · GST verified · mobile verified"
     ],
     "Leads & Enquiries": [
-      "Enquiries (90d): 33 received, 5 opened, replied on 4 (30d) · top: Toor Dal, Yellow Toor Dal",
+      "Enquiries (90d): 34 received, 5 opened, replied on 4 (30d) · top: Toor Dal, HDPE Pipe 2 inch",
       "Latest enquiry 09 Oct: HDPE Pipe 2 inch · a buyer from Lucknow · UNREAD (synthetic)",
       "Buy-leads bought (45d): 46 · toor dal"
     ],
@@ -45,7 +45,7 @@
       "city: Hyderabad, Telangana; categories: 3 Ply Face Mask, ABIDA Basmati Rice, Ajwain; business type; GST status; requirement: 100 coffee mugs; quantity: 100 pieces @ Rs 10/piece; language: Hinglish; name; preferred language: Hinglish"
     ],
     "Suggested Opening": [
-      "Namaste Yashwant ji! Main IndiaMART se Vani bol rahi hoon. Aapke pending catalogue updates aur 100 coffee mugs wali request ka kya update hai? Kya humein un par kaam karna chahiye?"
+      "Namaste Yashwant ji! Main IndiaMART se Vani bol rahi hoon. Humne aapke coffee mugs aur cricket bats ki pending update request par kaam shuru kar diya hai."
     ]
   }
 }

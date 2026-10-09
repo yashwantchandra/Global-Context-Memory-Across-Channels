@@ -1,0 +1,244 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Customer 360 · {{glid}}</title>
+<style>
+:root{
+  --bg:#f4f5fb; --card:#fff; --ink:#151a2d; --sub:#5b6178; --line:#e6e8f2;
+  --brand:#3b3fd8; --brand2:#7b5cff;
+  --amber:#b45309; --amber-bg:#fff4e0; --blue:#1d5fd1; --blue-bg:#e8f0ff;
+  --green:#0f7a4f; --green-bg:#e3f6ed; --violet:#6d3fd6; --violet-bg:#f0eaff;
+  --teal:#0c7a86; --teal-bg:#e2f6f7; --slate:#475069; --slate-bg:#eef0f6; --red:#b42318; --red-bg:#fdecea;
+}
+*{box-sizing:border-box} html,body{margin:0}
+body{font:15px/1.5 "Inter","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+.wrap{max-width:1180px;margin:0 auto;padding:22px 20px 40px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-size:13px;color:var(--sub)}
+.top a{color:var(--sub);text-decoration:none} .top a:hover{color:var(--brand)}
+/* hero */
+.hero{background:linear-gradient(120deg,var(--brand),var(--brand2));color:#fff;border-radius:20px;padding:26px 28px;
+  display:grid;grid-template-columns:auto 1fr auto;gap:22px;align-items:center;box-shadow:0 14px 40px -18px rgba(59,63,216,.6)}
+.avatar{width:74px;height:74px;border-radius:50%;background:rgba(255,255,255,.18);display:grid;place-items:center;
+  font-size:30px;font-weight:700;border:2px solid rgba(255,255,255,.35)}
+.hero h1{margin:0;font-size:28px;letter-spacing:-.01em}
+.hero .line{opacity:.9;margin-top:4px}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.pill{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);padding:4px 11px;border-radius:99px;font-size:12.5px}
+.fresh{text-align:right}
+.callnow{display:inline-block;margin-top:12px;border:0;background:#fff;color:var(--brand);font:inherit;font-weight:700;
+  padding:9px 16px;border-radius:12px;cursor:pointer;box-shadow:0 6px 18px -8px rgba(0,0,0,.4)}
+.callnow:hover{transform:translateY(-1px)}
+.callmsg{font-size:12px;margin-top:6px;opacity:.95;max-width:260px;margin-left:auto}
+.fresh .big{font-size:34px;font-weight:700;line-height:1}
+.fresh .small{font-size:12px;opacity:.85}
+/* kpis */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.kpi .n{font-size:28px;font-weight:700} .kpi .l{font-size:12.5px;color:var(--sub);text-transform:uppercase;letter-spacing:.05em}
+/* layout */
+.grid{display:grid;grid-template-columns:1.35fr 1fr;gap:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px 22px;margin-bottom:18px}
+.card h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--sub);margin:0 0 14px;display:flex;gap:8px;align-items:center}
+.card h2 .count{background:var(--slate-bg);color:var(--slate);border-radius:99px;padding:1px 9px;font-size:12px;letter-spacing:0}
+/* opening */
+.say{display:flex;gap:12px;align-items:flex-start;margin-bottom:12px}
+.say .who{flex:none;width:34px;height:34px;border-radius:50%;background:var(--violet-bg);color:var(--violet);display:grid;place-items:center;font-weight:700}
+.bubble{background:#f6f4ff;border:1px solid #e4dcff;border-radius:4px 16px 16px 16px;padding:12px 15px;font-size:15.5px}
+.bubble.check{background:var(--blue-bg);border-color:#cfdcff}
+.step{font-size:11.5px;color:var(--sub);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+/* threads */
+.thread{display:flex;gap:14px;padding:14px;border:1px solid var(--line);border-radius:14px;margin-bottom:10px;align-items:flex-start}
+.tag{flex:none;font-size:11.5px;font-weight:700;padding:5px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.t-amber{background:var(--amber-bg);color:var(--amber)} .t-blue{background:var(--blue-bg);color:var(--blue)}
+.t-green{background:var(--green-bg);color:var(--green)} .t-violet{background:var(--violet-bg);color:var(--violet)}
+.t-teal{background:var(--teal-bg);color:var(--teal)} .t-slate{background:var(--slate-bg);color:var(--slate)}
+.t-red{background:var(--red-bg);color:var(--red)}
+.thread .txt{flex:1} .thread .src{font-size:12px;color:var(--sub);margin-top:2px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.chip{background:var(--slate-bg);color:var(--slate);border-radius:99px;padding:3px 10px;font-size:12.5px}
+.syn{font-size:10.5px;color:var(--amber);border:1px solid #f3d29a;border-radius:6px;padding:0 5px;margin-left:6px;white-space:nowrap}
+/* requirement */
+.req{border-radius:16px;padding:16px 18px;border:1px solid var(--line);background:linear-gradient(180deg,#fff,#fbfbff)}
+.req .title{font-size:18px;font-weight:700}
+.req .meta{color:var(--sub);font-size:13px;margin-top:2px}
+.status{display:inline-flex;gap:6px;align-items:center;margin-top:10px;font-size:13px;font-weight:600;padding:5px 11px;border-radius:10px}
+.ok{background:var(--green-bg);color:var(--green)} .warn{background:var(--amber-bg);color:var(--amber)}
+/* requests */
+.rq{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:11px 0;border-bottom:1px dashed var(--line)}
+.rq:last-child{border-bottom:0}
+.rq .what{font-weight:600} .rq .det{font-size:13px;color:var(--sub)}
+/* timeline */
+.tl{position:relative;padding-left:26px}
+.tl:before{content:"";position:absolute;left:9px;top:4px;bottom:4px;width:2px;background:var(--line)}
+.ev{position:relative;margin-bottom:14px}
+.ev .dot{position:absolute;left:-26px;top:2px;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;font-size:11px;color:#fff}
+.ev .when{font-size:12px;color:var(--sub)} .ev .ch{font-weight:600}
+/* facts */
+.facts{display:grid;grid-template-columns:1fr;gap:10px}
+.fact .k{font-size:11.5px;color:var(--sub);text-transform:uppercase;letter-spacing:.06em}
+.fact .v{font-size:14px}
+.dna .chip{background:var(--red-bg);color:var(--red)}
+.foot{display:flex;flex-wrap:wrap;gap:6px;font-size:12px;color:var(--sub);margin-top:6px}
+.empty{color:var(--sub);font-style:italic}
+@media (max-width:900px){.grid{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.hero{grid-template-columns:1fr}.fresh{text-align:left}}
+@media print{body{background:#fff}.top{display:none}.card,.kpi{break-inside:avoid}}
+</style></head><body><div class="wrap">
+<div class="top" id="top"><a href="/" target="_top">← Global Context</a><span>Customer 360 · reads <b>{{role}}/{{glid}}.md</b> live · no LLM</span></div>
+<div id="app">Loading…</div>
+</div>
+<script>
+const glid='{{glid}}';
+if (new URLSearchParams(location.search).has('embed')) document.getElementById('top').style.display = 'none';
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const syn = s => /\(synthetic\)/.test(s);
+const clean = s => String(s).replace(/\s*\(synthetic\)\s*/g,'').trim();
+const synTag = s => syn(s) ? '<span class="syn">synthetic</span>' : '';
+const sec = (d, k) => (d.sections[k] || []).filter(r => !/^(No data|No conversations|No engagement|None$|No profile)/.test(r));
+
+function classify(t){
+  if (/^Pending price update/i.test(t)) return ['Price update','t-amber'];
+  if (/^Pending catalogue update/i.test(t)) return ['Catalogue update','t-amber'];
+  if (/^Pending requirement/i.test(t)) return ['Requirement to post','t-violet'];
+  if (/^Pending enquiry/i.test(t)) return ['Enquiry to send','t-teal'];
+  if (/^Callback promised/i.test(t)) return ['Callback','t-blue'];
+  if (/^Next step agreed/i.test(t)) return ['Next step','t-green'];
+  if (/^Still unknown/i.test(t)) return ['Ask only if needed','t-slate'];
+  if (/^Requirement '/i.test(t)) return ['Awaiting supplier','t-red'];
+  if (/unread enquir/i.test(t)) return ['New buyer leads','t-teal'];
+  if (/Caution/i.test(t)) return ['Caution','t-red'];
+  return ['Follow-up','t-slate'];
+}
+function threadHTML(raw){
+  const t = clean(raw); const [label, cls] = classify(t);
+  let body = t.replace(/^(Pending [a-z ]+?:|Next step agreed:|Callback promised:)\s*/i,'');
+  const src = (body.match(/\(((?:from |said on |raised |voice|phone|chat)[^)]*)\)\s*$/i)||[])[1];
+  if (src) body = body.replace(/\s*\([^)]*\)\s*$/,'');
+  let extra = '';
+  if (label === 'Ask only if needed') {
+    const items = body.replace(/^Still unknown, ask only if needed:\s*/i,'').split(/,\s*/);
+    body = 'Not known yet: Vani asks only when needed to proceed';
+    extra = '<div class="chips">' + items.map(i => `<span class="chip">${esc(i)}</span>`).join('') + '</div>';
+  }
+  return `<div class="thread"><span class="tag ${cls}">${label}</span><div class="txt">${esc(body.replace(/ · /g,' · '))}${synTag(raw)}
+    ${src ? `<div class="src">${esc(src)}</div>` : ''}${extra}</div></div>`;
+}
+const CH = {'Phone call':['☎','#1d5fd1'],'Voice call':['🎙','#6d3fd6'],'Chat':['💬','#0c7a86'],'WhatsApp':['✆','#16a34a'],
+            'VANI call':['V','#475069'],'Buyer call':['☎','#b45309'],'Last call with IndiaMART':['☎','#475069']};
+function eventHTML(raw){
+  const r = clean(raw); const m = r.match(/^(\d{2} \w{3}) · ([^:]+):\s*(.*)$/);
+  const when = m ? m[1] : ''; let ch = m ? m[2] : 'Note'; const txt = m ? m[3] : r;
+  const ours = /\(our bot\)/.test(ch); ch = ch.replace(/\s*\(our bot\)/,'');
+  const [ic, col] = CH[ch] || ['•','#94a3b8'];
+  return `<div class="ev"><span class="dot" style="background:${col}">${ic}</span>
+    <div class="when">${esc(when)} · <span class="ch">${esc(ch)}</span>${ours ? ' <span class="chip" style="font-size:11px">with Vani</span>' : ''}${synTag(raw)}</div>
+    <div>${esc(txt)}</div></div>`;
+}
+function requirementHTML(d){
+  const rows = (d.role === 'buyer' ? sec(d,'Enquiries & Status') : sec(d,'Leads & Enquiries'));
+  if (!rows.length) return '<div class="empty">No open requirement in the lookback window</div>';
+  if (d.role === 'seller') return rows.map(r => `<div class="fact"><div class="v">${esc(clean(r))}${synTag(r)}</div></div>`).join('<div style="height:8px"></div>');
+  const post = rows.find(r => /^Buy requirement posted/.test(r));
+  const det = rows.find(r => /^Details:/.test(r));
+  const others = rows.filter(r => r !== post && r !== det);
+  let html = '';
+  if (post) {
+    const m = clean(post).match(/^Buy requirement posted ([^:]+):\s*(.*?)(?: · (\d+) suppliers connected)?$/);
+    html += `<div class="req"><div class="title">${esc(m ? m[2] : clean(post))}</div>
+      <div class="meta">Posted ${esc(m ? m[1] : '')}${m && m[3] !== undefined ? ` · <b>${m[3]}</b> suppliers connected` : ''}${synTag(post)}</div>`;
+    if (det) {
+      const dt = clean(det).replace(/^Details:\s*/,''); const conf = /confirmed on/.test(dt) && !/unconfirmed/.test(dt);
+      const main = dt.replace(/\s*\([^)]*\)\s*$/,''); const st = (dt.match(/\(([^)]*)\)\s*$/)||[])[1] || '';
+      html += `<div style="margin-top:10px;font-size:15px">${esc(main)}</div>
+        <span class="status ${conf ? 'ok' : 'warn'}">${conf ? '✔' : '⟳'} ${esc(st)}</span>`;
+    }
+    html += '</div>';
+  }
+  if (others.length) html += '<div class="foot" style="margin-top:12px">' + others.map(r => `<span class="chip">${esc(clean(r))}</span>`).join('') + '</div>';
+  return html;
+}
+function requestsHTML(list){
+  if (!list.length) return '<div class="empty">No requests raised on our channels yet</div>';
+  const label = {catalogue_updation_requests:['Catalogue','t-amber'], requirements:['Requirement','t-violet'], enquiry:['Enquiry','t-teal']};
+  return list.map(r => {
+    const parts = clean(r.text).split(' · '); const when = parts[0] || ''; const kind = parts[1] || '';
+    const what = parts[2] || ''; const det = parts.slice(3).join(' · ');
+    const [lab, cls] = label[r.folder] || [r.folder,'t-slate'];
+    return `<div class="rq"><span class="tag ${cls}">${esc(kind || lab)}</span>
+      <div><div class="what">${esc(what)}${synTag(r.text)}</div><div class="det">${esc(det)} · ${esc(when)}</div></div>
+      <span class="tag ${r.status === 'pending' ? 't-amber' : 't-green'}">${r.status === 'pending' ? 'Pending' : 'Done'}</span></div>`;
+  }).join('');
+}
+async function callNow(){
+  const msg = document.getElementById('callmsg');
+  const ph = await (await fetch(`/api/phone/${glid}`)).json();
+  let number = ph.phone;
+  if (!number) {
+    number = prompt('Phone number to call for this GLID (+91…)');
+    if (!number) return;
+    await fetch(`/api/phone/${glid}`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({phone:number})});
+  }
+  const res = await fetch(`/api/call/${glid}`, {method:'POST'}); const r = await res.json();
+  msg.textContent = !res.ok ? (r.detail || 'Could not place the call')
+    : r.status === 'dialing' ? `Dialing ${r.phone}… answer the phone`
+    : `Queued call to ${r.phone}. No telephony connection yet: ask Claude to “call the queue”.`;
+}
+(async () => {
+  const d = await (await fetch(`/api/view/${glid}`)).json();
+  const m = d.meta; const idRow = clean((d.sections['Identity']||[''])[0]);
+  const name = (idRow.match(/Contact: ([^·]+)/)||idRow.match(/Name: ([^·]+)/)||[])[1]?.trim();
+  const biz = (idRow.match(/Business: ([^·]+)/)||[])[1]?.trim();
+  const lang = (idRow.match(/Preferred language: ([^(·]+)/)||[])[1]?.trim();
+  const langSrc = (idRow.match(/Preferred language: [^(]+\(([^)]*)\)/)||[])[1];
+  const who = (name && !/not known|unknown/.test(name)) ? name : (biz && biz !== 'unknown' ? biz : 'New user');
+  const snap = sec(d,'Snapshot').map(clean);
+  const threads = d.sections['Open Threads'] && !/^None$/.test(d.sections['Open Threads'][0]) ? d.sections['Open Threads'] : [];
+  const past = sec(d,'Past Conversations');
+  const pending = d.requests.filter(r => r.status === 'pending').length;
+  const dna = (d.sections['Do-Not-Ask']||[''])[0];
+  const dnaItems = /^Nothing yet/.test(dna) ? [] : dna.split(/;\s*/).filter(Boolean);
+  const opening = clean((d.sections['Suggested Opening']||[''])[0]);
+  const facts = [['Snapshot', snap.join(' · ')], [d.role==='seller'?'Responses & calls':'Categories searched',
+      (d.role==='seller'? sec(d,'Responses & Calls') : sec(d,'Categories Searched')).map(clean).join(' · ')],
+     ['Engagement', sec(d,'Engagement Signals').map(clean).join(' · ')],
+     [d.role==='buyer'?'KYC':'Sellers', d.role==='buyer'? sec(d,'KYC').map(clean).join(' · ') : '']].filter(f => f[1]);
+  document.title = `${who} · Customer 360`;
+  document.getElementById('app').innerHTML = `
+  <section class="hero">
+    <div class="avatar">${esc(who[0]||'?')}</div>
+    <div><h1>${esc(who)}${biz && name ? ` <span style="font-weight:500;opacity:.85">· ${esc(biz)}</span>` : ''}</h1>
+      <div class="line">${esc(snap[0]||'No profile data yet')}</div>
+      <div class="pills"><span class="pill">${d.role === 'seller' ? 'Seller' : 'Buyer'} · GLID ${esc(glid)}</span>
+        ${lang ? `<span class="pill">🗣 ${esc(lang)}${langSrc ? ` · ${esc(langSrc)}` : ''}</span>` : ''}
+        <span class="pill">data: ${esc(m.data_quality)}</span>
+        ${m.synthetic === 'true' ? '<span class="pill">contains synthetic data</span>' : ''}</div></div>
+    <div class="fresh">${d.last_freshness ? `<div class="big">${esc(d.last_freshness.ms)} ms</div>
+      <div class="small">last ${esc(d.last_freshness.trigger === 'session' ? 'conversation' : d.last_freshness.trigger)} → file updated</div>
+      <div class="small">${esc(String(d.last_freshness.at).replace('T',' ').slice(0,16))}</div>`
+      : `<div class="big" style="font-size:22px">built</div><div class="small">${esc(String(m.generated_at||'').replace('T',' ').slice(0,16))}</div>`}
+      <div><button class="callnow" onclick="callNow()">📞 Call ${esc(who)}</button></div><div class="callmsg" id="callmsg"></div></div>
+  </section>
+  <div class="kpis">
+    <div class="kpi"><div class="n">${threads.length}</div><div class="l">Open threads</div></div>
+    <div class="kpi"><div class="n">${pending}</div><div class="l">Pending requests</div></div>
+    <div class="kpi"><div class="n">${past.length}</div><div class="l">Recent conversations</div></div>
+    <div class="kpi"><div class="n">${dnaItems.length}</div><div class="l">Facts never re-asked</div></div>
+  </div>
+  <div class="grid"><div>
+    <div class="card"><h2>What Vani says on the next call</h2>
+      ${d.identity_check ? `<div class="step">1 · Confirm identity, then wait for "yes"</div>
+        <div class="say"><div class="who">V</div><div class="bubble check">${esc(d.identity_check)}</div></div>` : ''}
+      <div class="step">${d.identity_check ? '2 · After "yes"' : 'Opening'}</div>
+      <div class="say"><div class="who">V</div><div class="bubble">${esc(opening)}</div></div></div>
+    <div class="card"><h2>Open threads <span class="count">${threads.length}</span></h2>
+      ${threads.length ? threads.map(threadHTML).join('') : '<div class="empty">Nothing pending: Vani asks open questions</div>'}</div>
+    <div class="card"><h2>${d.role === 'buyer' ? 'Requirement' : 'Leads & enquiries'}</h2>${requirementHTML(d)}</div>
+    <div class="card"><h2>Requests raised on our channels <span class="count">${d.requests.length}</span></h2>${requestsHTML(d.requests)}</div>
+  </div><div>
+    <div class="card"><h2>Conversation timeline</h2>
+      ${past.length ? '<div class="tl">' + past.map(eventHTML).join('') + '</div>' : '<div class="empty">No conversations yet</div>'}</div>
+    <div class="card dna"><h2>Never ask again</h2>
+      ${dnaItems.length ? '<div class="chips">' + dnaItems.map(i => `<span class="chip">${esc(i)}</span>`).join('') + '</div>' : '<div class="empty">Nothing known yet</div>'}</div>
+    <div class="card"><h2>Profile facts</h2><div class="facts">
+      ${facts.map(([k,v]) => `<div class="fact"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div></div>`).join('')}</div>
+      <div class="foot" style="margin-top:14px">${(m.sources||'').replace(/[\[\]]/g,'').split(',').filter(x=>x.trim()).map(s => `<span class="chip">${esc(s.trim())}</span>`).join('')}</div></div>
+  </div></div>`;
+})();
+</script></body></html>

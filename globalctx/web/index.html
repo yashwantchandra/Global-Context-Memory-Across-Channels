@@ -3,7 +3,7 @@
 <header><b>Global Context · Memory Across Channels</b><span class="muted">PS02 · local only</span></header>
 <main class="grid">
   <div class="card"><h2>Open any GLID <span class="muted">(buyer or seller is picked automatically; a new GLID gets a cold-start file)</span></h2>
-    <div class="row"><input id="anyglid" placeholder="GLID"><button class="primary" onclick="location.href='/chat/'+document.getElementById('anyglid').value.trim()">Chat</button></div></div>
+    <div class="row"><input id="anyglid" placeholder="GLID"><button class="primary" onclick="location.href='/view/'+document.getElementById('anyglid').value.trim()">360 view</button><button onclick="location.href='/chat/'+document.getElementById('anyglid').value.trim()">Chat</button></div></div>
   <div class="grid two">
     <div class="card"><h2>Sellers</h2><table id="sellers"></table></div>
     <div class="card"><h2>Buyers</h2><table id="buyers"></table></div>
@@ -22,6 +22,7 @@ async function load(){
     t.innerHTML = '<tr><th>GLID</th><th></th><th></th></tr>' + (d[role]||[]).map(g => `
       <tr><td>${g}${cold[role]===g?' <span class="chip">cold start</span>':''}</td>
       <td><a class="btn" href="/api/profile/${role}/${g}" target="_blank">${role}.md</a>
+          <a class="btn" href="/view/${g}">360 view</a>
           <a class="btn" href="/chat/${role}/${g}">Chat</a>
           <a class="btn" href="/prep/${role}/${g}">Call prep</a></td>
       <td><button onclick="sim('${role}','${g}',this)">+ new activity</button></td></tr>`).join('');

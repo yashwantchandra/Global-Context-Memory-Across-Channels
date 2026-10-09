@@ -28,13 +28,13 @@ evicted: {past_conversations: 7}
 - Extrusion Blow Moulding Machine (4) · Bottle Mould (4) · PET Bottle Making Machine (2)
 
 ## Sellers Contacted
-- 1 sellers contacted (30d) · recent: [Name 6], [Name 7], [Name 2]
+- 1 sellers contacted (30d) · recent: [Name 5], [Name 7], [Name 2]
 
 ## KYC
 - Mobile Verified · email not verified · GST not available
 
 ## Past Conversations
-- 30 Sep · WhatsApp: [Name 6] (Greater Noida) (also deals in Varanasi) responded to your 250ml 28m
+- 30 Sep · WhatsApp: [Name 5] (Greater Noida) (also deals in Varanasi) responded to your 250ml 28m
 - 30 Sep · WhatsApp: Hi! [Name 7] tried to reach you 📞 Did you connect?
 - 30 Sep · WhatsApp: [Name 2] (Mumbai) (also deals in Varanasi) responded to your 250ml 28mm PCO
 

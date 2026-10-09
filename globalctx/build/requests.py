@@ -25,11 +25,33 @@ def record(glid, role, channel, session_id, requests, synthetic):
         rtype = r.get("type")
         if rtype not in config.REQUEST_TYPES_BY_ROLE.get(role, set()):
             continue  # e.g. a seller cannot raise an enquiry; complaints are not requests
-        store.add_event(glid, role, "request", channel,
-                        {**{k: v for k, v in r.items() if v}, "type": rtype, "status": "pending",
-                         "session_id": session_id}, synthetic=synthetic)
+        payload = {**{k: v for k, v in r.items() if v}, "type": rtype, "status": "pending", "session_id": session_id}
+        if _same_pending(glid, role, rtype, r.get("product")):
+            # the same request raised again (e.g. asked on two calls): supersede the old one, keep one line
+            _close_pending(glid, role, rtype, r.get("product"), status="merged")
+        store.add_event(glid, role, "request", channel, payload, synthetic=synthetic)
         folders.add(config.REQUEST_FOLDERS[rtype])
     return [render(glid, f) for f in sorted(folders)]
+
+
+def _key(product):
+    return " ".join(sorted(w for w in (product or "").lower().replace("-", " ").split() if len(w) > 2))
+
+
+def _same_pending(glid, role, rtype, product):
+    return any(e["payload"].get("type") == rtype and e["payload"].get("status", "pending") == "pending"
+               and _key(e["payload"].get("product")) == _key(product)
+               for e in store.events_for(glid, role, source="request"))
+
+
+def _close_pending(glid, role, rtype, product, status="merged"):
+    import json
+    with store.connect() as c:
+        for e in store.events_for(glid, role, source="request"):
+            p = e["payload"]
+            if p.get("type") == rtype and p.get("status", "pending") == "pending" and _key(p.get("product")) == _key(product):
+                p["status"] = status
+                c.execute("UPDATE events SET payload=? WHERE id=?", (json.dumps(p, ensure_ascii=False), e["id"]))
 
 
 def render(glid, folder):
@@ -45,9 +67,10 @@ def render(glid, folder):
     pending = [e for e in rows if e["payload"].get("status", "pending") == "pending"]
     lines = ["---", f"glid: {glid}", f"role: {role}", f"folder: {folder}",
              f"updated_at: {datetime.now().isoformat(timespec='seconds')}",
-             f"pending: {len(pending)}", f"total: {len(rows)}", f"synthetic: {'true' if synthetic else 'false'}", "---",
+             f"pending: {len(pending)}", f"total: {len(pending) + len([e for e in rows if e['payload'].get('status') == 'done'])}", f"synthetic: {'true' if synthetic else 'false'}", "---",
              f"# {TITLES[folder]} · GLID {glid}", ""]
-    for title, group in (("Pending", pending), ("Done", [e for e in rows if e not in pending])):
+    done = [e for e in rows if e["payload"].get("status") == "done"]
+    for title, group in (("Pending", pending), ("Done", done)):
         lines.append(f"## {title}")
         if not group:
             lines.append("- None")

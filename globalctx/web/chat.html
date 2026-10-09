@@ -1,6 +1,6 @@
 <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Chat channel</title><link rel="stylesheet" href="/static/style.css"></head><body>
-<header><a href="/">← Home</a><b>Chat · {{role}} {{glid}}</b><span class="muted">channel 2: resumes from the same file</span></header>
+<header id="hdr"><a href="/" target="_top">← Home</a><b>Chat · {{role}} {{glid}}</b><span class="muted">channel 2: resumes from the same file</span></header>
 <main class="grid two">
   <div class="card">
     <h2>Conversation <span id="state" class="chip">not started</span></h2>
@@ -14,6 +14,7 @@
 </main>
 <script>
 const role='{{role}}', glid='{{glid}}'; let sid=null;
+if (new URLSearchParams(location.search).has('embed')) document.getElementById('hdr').style.display = 'none';
 const $=id=>document.getElementById(id);
 const add=(who,text)=>{const d=document.createElement('div');d.className='m '+who;d.textContent=text;$('log').appendChild(d);$('log').scrollTop=1e9};
 async function md(){ $('md').textContent = await (await fetch(`/api/profile/${role}/${glid}`)).text(); }
