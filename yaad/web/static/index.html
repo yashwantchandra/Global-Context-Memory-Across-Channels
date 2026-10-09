@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yaad · one memory, every channel</title>
+<style>
+  :root{
+    --bg:#f4f5f8; --card:#fff; --ink:#151821; --ink2:#4a5060; --mute:#8a90a0; --line:#e6e8ee;
+    --acc:#4f46e5; --acc-soft:#eef0ff; --ok:#15803d; --ok-soft:#e8f6ee; --warn:#b45309; --warn-soft:#fff4e5;
+    --bad:#be123c; --bad-soft:#ffeef1; --info:#0369a1; --info-soft:#e7f4fb; --new:#fff6bf;
+    --wa:#dcf8c6; --wa-bg:#efeae2; --r:14px; --sh:0 1px 2px rgba(16,24,40,.04),0 4px 14px rgba(16,24,40,.06);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.5 -apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+  button{font:inherit;cursor:pointer}
+  input,select,textarea{font:inherit;color:inherit}
+  header{display:flex;align-items:center;gap:14px;padding:12px 22px;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5}
+  .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;display:grid;place-items:center;font-weight:800;font-size:18px}
+  .brand b{font-size:18px;letter-spacing:-.01em}.brand div{font-size:12px;color:var(--mute);margin-top:-2px}
+  .pills{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+  .pill{font-size:12px;font-weight:600;padding:6px 11px;border-radius:999px;background:var(--acc-soft);color:var(--acc);white-space:nowrap}
+  .pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.warn{background:var(--warn-soft);color:var(--warn)}
+  .pill.flash{animation:flash 1.6s ease}
+  @keyframes flash{0%{background:#fde68a;color:#78350f}100%{}}
+  main{display:grid;grid-template-columns:290px minmax(0,1fr) 440px;gap:16px;padding:16px 22px;height:calc(100vh - 59px)}
+  .col{display:flex;flex-direction:column;gap:14px;min-height:0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:14px}
+  .scroll{overflow:auto;min-height:0}
+  .h{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);margin:0 0 10px;display:flex;align-items:center;gap:8px}
+  .h .sp{flex:1}
+  .mute{color:var(--mute)} .small{font-size:12px}
+  .seg{display:flex;background:#f1f2f6;border-radius:10px;padding:3px;gap:2px}
+  .seg button{flex:1;border:0;background:transparent;padding:6px 8px;border-radius:8px;color:var(--ink2);font-size:12.5px;font-weight:600}
+  .seg button.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+  .cust{display:flex;gap:10px;align-items:center;padding:9px;border-radius:12px;cursor:pointer;border:1px solid transparent;margin-top:6px}
+  .cust:hover{background:#f7f8fb}.cust.sel{background:var(--acc-soft);border-color:#c7cbff}
+  .av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+  .av.seller{background:#ede9fe;color:#6d28d9}.av.buyer{background:#dcfce7;color:#15803d}.av.cold{background:#f1f5f9;color:#64748b}
+  .cust .t{font-weight:600;font-size:13px;line-height:1.25}.cust .s{font-size:11.5px;color:var(--mute)}
+  .tag{font-size:10px;font-weight:700;letter-spacing:.04em;padding:2px 6px;border-radius:6px;background:#f1f5f9;color:#64748b}
+  .tag.real{background:#e0f2fe;color:#0369a1}
+  .field{width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:9px;background:#fff;outline:none}
+  .field:focus{border-color:#a5acff;box-shadow:0 0 0 3px var(--acc-soft)}
+  .row{display:flex;gap:6px}
+  .btn{border:0;border-radius:10px;padding:9px 14px;font-weight:600;background:var(--acc);color:#fff}
+  .btn:hover{filter:brightness(1.07)} .btn:disabled{opacity:.45;cursor:not-allowed}
+  .btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)} .btn.red{background:#e11d48}
+  .btn.block{width:100%}
+  .note{margin-top:8px;padding:9px 11px;border-radius:10px;font-size:12.5px;background:var(--ok-soft);color:#14532d}
+  .note.warn{background:var(--warn-soft);color:#7c2d12}.note.info{background:var(--info-soft);color:#0c4a6e}
+  #log{font:11.5px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--mute);line-height:1.6}
+  .memhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .memhead h2{font-size:17px;margin:0;letter-spacing:-.01em}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{font-size:11.5px;padding:3px 9px;border-radius:999px;background:#f1f2f6;color:var(--ink2);font-weight:500}
+  .chip.syn{background:#fef3c7;color:#92400e}.chip.real{background:#e0f2fe;color:#0369a1}.chip.cold{background:#f1f5f9;color:#475569}
+  .opening{position:relative;margin:14px 0 4px;padding:14px 16px 14px 52px;border-radius:16px;background:linear-gradient(135deg,#eef0ff,#f5f3ff);border:1px solid #dfe2ff}
+  .opening:before{content:"🗣";position:absolute;left:16px;top:13px;font-size:20px}
+  .opening .l{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--acc);margin-bottom:2px}
+  .opening .q{font-size:15px;font-weight:500;color:#1e1b4b}
+  .thread{border:1px solid var(--line);border-radius:12px;padding:11px 13px;margin-top:9px;background:#fff;transition:background 2.5s}
+  .thread .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .thread .n{width:22px;height:22px;border-radius:50%;background:#f1f2f6;display:grid;place-items:center;font-size:11.5px;font-weight:700;color:var(--ink2)}
+  .thread .title{font-weight:650}
+  .thread .meta{margin-left:auto;font-size:11.5px;color:var(--mute)}
+  .thread .d{font-size:13px;color:var(--ink2);margin:6px 0 4px}
+  .thread .nx{font-size:12.5px;color:var(--acc);font-weight:550}
+  .badge{font-size:10.5px;font-weight:700;letter-spacing:.04em;padding:3px 8px;border-radius:7px;background:#f1f2f6;color:#475569}
+  .b-red{background:var(--bad-soft);color:var(--bad)}.b-amber{background:var(--warn-soft);color:var(--warn)}
+  .b-green{background:var(--ok-soft);color:var(--ok)}.b-blue{background:var(--info-soft);color:var(--info)}.b-violet{background:#f3e8ff;color:#7e22ce}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+  .list{margin:0;padding:0;list-style:none}
+  .list li{display:flex;gap:8px;padding:5px 0;font-size:13px;color:var(--ink2);border-bottom:1px dashed #eef0f4}
+  .list li:last-child{border-bottom:0}
+  .list li:before{content:"✓";color:var(--ok);font-weight:700}
+  .list.g li:before{content:"!";color:var(--bad);width:12px;text-align:center}
+  .list.w li:before{content:"·";color:var(--mute)}
+  .tl{position:relative;margin:4px 0 0;padding-left:16px}
+  .tl:before{content:"";position:absolute;left:5px;top:6px;bottom:6px;width:2px;background:#e9eaf0}
+  .tl div{position:relative;padding:4px 0;font-size:13px;color:var(--ink2)}
+  .tl div:before{content:"";position:absolute;left:-15px;top:11px;width:8px;height:8px;border-radius:50%;background:#c7cbff}
+  .tl b{color:var(--ink);font-weight:600}
+  .sub{font-size:12px;font-weight:700;color:var(--ink2);margin:14px 0 4px}
+  .new{background:var(--new)!important}
+  #raw{white-space:pre-wrap;font:12.5px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;margin:12px 0 0;background:#0f1220;color:#d8dcf0;border-radius:12px;padding:14px}
+  #raw .l{display:block}#raw .l.new{background:#3b3a14!important;color:#fff}
+  .toast{font-size:12px;font-weight:600;color:#14532d;background:var(--ok-soft);padding:4px 10px;border-radius:999px;opacity:0;transition:opacity .4s}
+  .toast.show{opacity:1}
+  .tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px}
+  .tabs button{border:0;background:transparent;padding:7px 11px;border-radius:9px;font-weight:600;font-size:12.5px;color:var(--ink2)}
+  .tabs button.on{background:var(--ink);color:#fff}
+  .pane{display:none}.pane.on{display:block}
+  .callbox{border-radius:14px;padding:16px;background:linear-gradient(160deg,#111827,#1f2937);color:#fff}
+  .callbox .who{display:flex;align-items:center;gap:12px}
+  .callbox .who .av{width:46px;height:46px;font-size:16px}
+  .callbox .nm{font-weight:700;font-size:15px}.callbox .sm{font-size:12px;color:#9ca3af}
+  .callbox select,.callbox input{background:#111827;border:1px solid #374151;color:#fff;border-radius:10px;padding:9px 10px;width:100%}
+  .steps{display:flex;gap:6px;margin-top:14px}
+  .step{flex:1;text-align:center;font-size:11px;padding:7px 4px;border-radius:9px;background:#374151;color:#9ca3af;font-weight:600}
+  .step.done{background:#16a34a;color:#fff}.step.cur{background:#4f46e5;color:#fff}
+  .bigcall{width:100%;margin-top:12px;border:0;border-radius:12px;padding:13px;font-weight:700;font-size:15px;background:#22c55e;color:#04210f}
+  .bigcall:disabled{opacity:.5}
+  .calls{margin-top:12px}
+  .calls div{display:flex;justify-content:space-between;font-size:12.5px;padding:7px 0;border-bottom:1px solid var(--line)}
+  .wa{border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+  .wa .bar{display:flex;align-items:center;gap:10px;background:#075e54;color:#fff;padding:10px 12px}
+  .wa .bar .av{width:32px;height:32px;background:#25d366;color:#fff}
+  .wa .bar small{display:block;color:#b2dfdb;font-size:11px}
+  #msgs{height:44vh;overflow:auto;background:var(--wa-bg);padding:12px}
+  .msg{max-width:82%;padding:7px 10px 5px;border-radius:10px;margin:5px 0;font-size:13.5px;box-shadow:0 1px 1px rgba(0,0,0,.06);background:#fff}
+  .msg.user{margin-left:auto;background:var(--wa)}
+  .msg .t{font-size:10.5px;color:#7a8a80;text-align:right;margin-top:1px}
+  .msg.sys{max-width:100%;text-align:center;background:#fff8d6;color:#6b5a00;font-size:12px;margin:8px auto}
+  .wa .in{display:flex;gap:8px;padding:8px;background:#f0f0f0}
+  .wa .in input{flex:1;border:0;border-radius:20px;padding:9px 14px;outline:none}
+  .wa .in button{border:0;border-radius:50%;width:40px;height:40px;background:#075e54;color:#fff;font-size:16px}
+  #vmsgs{max-height:30vh;overflow:auto;background:#f8f9fb;border-radius:12px;padding:10px;margin-top:10px}
+  table{border-collapse:collapse;width:100%;font-size:12.5px}td,th{border-bottom:1px solid var(--line);padding:7px 5px;text-align:left;vertical-align:top}
+  th{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.05em}
+  .kpi{font-size:34px;font-weight:800;letter-spacing:-.02em}
+  .bars{display:flex;align-items:flex-end;gap:3px;height:60px;margin:10px 0}
+  .bars div{flex:1;background:#c7cbff;border-radius:3px 3px 0 0;min-height:3px}
+  @media (max-width:1250px){main{grid-template-columns:260px 1fr;height:auto}.right{grid-column:1/-1}}
+  @media (max-width:800px){main{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Y</div>
+  <div class="brand"><b>Yaad</b><div>one memory, every channel · IndiaMART PS02</div></div>
+  <div class="pills">
+    <span class="pill" id="pill-fresh">freshness: –</span>
+    <span class="pill ok" id="pill-checks">checks: –</span>
+    <span class="pill" id="pill-phone">phone: –</span>
+  </div>
+</header>
+
+<main>
+  <section class="col">
+    <div class="card scroll" style="flex:1;min-height:300px">
+      <div class="h">Customers</div>
+      <div class="seg" id="filter"><button data-f="all" class="on">All</button><button data-f="seller">Sellers</button><button data-f="buyer">Buyers</button></div>
+      <div id="personas"></div>
+    </div>
+    <div class="card">
+      <div class="h">Simulate new activity <span class="sp"></span><span class="small mute" id="inj-hint" style="text-transform:none;letter-spacing:0;font-weight:500"></span></div>
+      <div style="display:grid;gap:6px">
+        <input class="field" id="inj-product" placeholder="Product (e.g. SS 304 pipe)">
+        <div class="row"><input class="field" id="inj-city" placeholder="City" style="flex:1;min-width:0"><input class="field" id="inj-qty" placeholder="Qty" style="width:80px"></div>
+        <input class="field" id="inj-msg" placeholder="Message (optional)">
+        <button class="btn block" id="inj-btn" onclick="inject()">+ Add new enquiry</button>
+      </div>
+      <div id="inject-msg"></div>
+    </div>
+    <details class="card"><summary class="h" style="cursor:pointer;margin:0">Live log</summary><div id="log" class="scroll" style="max-height:16vh;margin-top:8px"></div></details>
+  </section>
+
+  <section class="card col scroll">
+    <div class="memhead">
+      <h2 id="md-title">Memory</h2>
+      <span class="toast" id="toast"></span>
+      <span style="flex:1"></span>
+      <div class="seg" id="view" style="width:170px"><button data-v="card" class="on">Card</button><button data-v="raw">Raw .md</button></div>
+    </div>
+    <div class="chips" id="chips" style="margin-top:8px"></div>
+    <div id="memcard"></div>
+    <pre id="raw" style="display:none"></pre>
+  </section>
+
+  <section class="card col scroll right">
+    <div class="tabs" id="tabs">
+      <button data-t="call" class="on">📞 Call</button><button data-t="chat">💬 Chat</button><button data-t="brief">🎭 Role-play</button>
+      <button data-t="card">🗂 Exec card</button><button data-t="queue">📋 Due today</button><button data-t="fresh">⚡ Freshness</button>
+    </div>
+
+    <div class="pane on" id="p-call">
+      <div class="callbox">
+        <div class="who"><div class="av" id="call-av">?</div><div><div class="nm" id="call-name">Pick a customer</div><div class="sm" id="call-sub">The agent will treat you as this customer</div></div></div>
+        <div style="margin-top:14px;font-size:12px;color:#9ca3af">Call this phone</div>
+        <div class="row" style="margin-top:4px"><select id="ph-num"></select></div>
+        <input id="ph-custom" placeholder="…or type another verified number" style="margin-top:6px">
+        <button class="bigcall" id="ph-btn" onclick="phoneCall()">📞 Call my phone</button>
+        <div class="steps"><div class="step" id="st1">Requested</div><div class="step" id="st2">Dialling</div><div class="step" id="st3">In call</div><div class="step" id="st4">Saved to memory</div></div>
+      </div>
+      <div id="ph-note"></div>
+      <div class="calls" id="ph-recent"></div>
+      <details style="margin-top:14px"><summary class="small mute" style="cursor:pointer">Laptop mic instead (use earphones)</summary>
+        <div class="row" style="margin-top:8px"><button class="btn ghost" id="btn-start" onclick="startCall()">Start laptop call</button><button class="btn red" id="btn-end" onclick="endCall()" disabled>End call</button></div>
+        <div id="vmsgs"></div><div id="voice-wb"></div>
+      </details>
+    </div>
+
+    <div class="pane" id="p-chat">
+      <div class="wa">
+        <div class="bar"><div class="av" style="border-radius:50%">Y</div><div><b>IndiaMART · Yaad</b><small id="chat-kind">WhatsApp-style chat · same memory</small></div>
+          <span style="flex:1"></span><button class="btn ghost" style="padding:5px 10px;font-size:12px" onclick="startChat()">New chat</button></div>
+        <div id="msgs"></div>
+        <div class="in"><input id="inp" placeholder="Type as the customer…"><button onclick="send()">➤</button></div>
+      </div>
+      <button class="btn ghost block" style="margin-top:8px" onclick="endChat()">End chat → save to memory</button>
+      <div id="chat-wb"></div>
+    </div>
+
+    <div class="pane" id="p-brief"><div id="briefv" class="mute">Select a customer.</div></div>
+    <div class="pane" id="p-card"><div id="cardv" class="mute">Select a seller.</div></div>
+    <div class="pane" id="p-queue"><div id="queuev" class="mute">Loading…</div></div>
+    <div class="pane" id="p-fresh"><div id="freshv"></div></div>
+  </section>
+</main>
+
+<script>
+let glid=null, role=null, label='', chatId=null, callId=null, prevLines=new Set(), personas=[], filter='all', view='card';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const api=async(path,opt={})=>{const r=await fetch(path,{headers:{'content-type':'application/json'},...opt}); if(!r.ok) throw new Error(await r.text()); return r.json();};
+const now=()=>new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+const log=t=>{$('log').insertAdjacentHTML('afterbegin',`<div>${now()} · ${esc(t)}</div>`)};
+const STATUS={PROMISED:'b-violet',NEW_ENQUIRY:'b-red',ACTIVE_NOW:'b-red',CALLBACK_DUE:'b-amber',UNANSWERED:'b-red',FAILED_CONNECT:'b-red',
+  LEADS_PENDING:'b-amber',CATALOG_BLOCKER:'b-amber',MISSED_CALLS:'b-amber',MEETING_FIXED:'b-blue',IN_DISCUSSION:'b-blue',
+  SELLERS_REACHING_OUT:'b-green',OPEN:'b-blue',STALE:''};
+const nice=s=>String(s||'').replace(/_/g,' ').toLowerCase();
+
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#tabs button').forEach(x=>x.classList.toggle('on',x===b));
+  document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id==='p-'+b.dataset.t));
+  ({brief:loadBrief,card:loadCard,queue:loadQueue,fresh:loadFresh,call:loadPhone,chat:()=>{if(!chatId&&glid) startChat();}})[b.dataset.t]?.();
+});
+document.querySelectorAll('#filter button').forEach(b=>b.onclick=()=>{filter=b.dataset.f;document.querySelectorAll('#filter button').forEach(x=>x.classList.toggle('on',x===b));renderPersonas();});
+document.querySelectorAll('#view button').forEach(b=>b.onclick=()=>{view=b.dataset.v;document.querySelectorAll('#view button').forEach(x=>x.classList.toggle('on',x===b));
+  $('memcard').style.display=view==='card'?'':'none'; $('raw').style.display=view==='raw'?'':'none';});
+
+async function loadPersonas(){ personas=await api('/api/glids'); renderPersonas(); if(personas.length) select(personas[0]); }
+function renderPersonas(){
+  $('personas').innerHTML=personas.map((p,i)=>{ if(filter!=='all'&&p.role!==filter) return '';
+    const real=!p.glid.startsWith('SYN-'), cold=(p.sub||'').includes('cold'), name=p.label, sub=p.sub||'';
+    return `<div class="cust ${p.glid===glid&&p.role===role?'sel':''}" data-i="${i}"><div class="av ${cold?'cold':p.role}">${p.role==='seller'?'S':'B'}</div>
+      <div style="min-width:0;flex:1"><div class="t">${esc(name)}</div><div class="s">${esc(sub)}</div></div><span class="tag ${real?'real':''}">${real?'REAL':'SYN'}</span></div>`;}).join('');
+  document.querySelectorAll('.cust').forEach(el=>el.onclick=()=>select(personas[el.dataset.i]));
+}
+async function select(p){
+  glid=p.glid; role=p.role; label=p.label; prevLines=new Set(); chatId=null; $('msgs').innerHTML=''; $('chat-wb').innerHTML='';
+  renderPersonas(); injLabels(); await loadMemory(false); updateCallHeader();
+  const t=document.querySelector('#tabs button.on').dataset.t; ({brief:loadBrief,card:loadCard,chat:startChat})[t]?.();
+}
+
+async function loadMemory(highlight=true, ms=null){
+  if(!glid) return;
+  const d=await api(`/api/memory/${encodeURIComponent(glid)}/${role}`);
+  const lines=d.md.split('\n'), changed=new Set(highlight?lines.filter(l=>!prevLines.has(l)):[]);
+  prevLines=new Set(lines);
+  const p=d.parsed, m=p.meta, r=d.render||{}, S=p.sections;
+  $('md-title').textContent=`${role}.md · ${glid}`;
+  const syn=m.synthetic_sources&&m.synthetic_sources!=='[]';
+  $('chips').innerHTML=[[`~${r.tokens??'?'} tokens`,''],[`🗣 ${m.language}`,''],[`updated ${(m.generated_at||'').slice(11,16)}`,''],
+    m.cold_start==='true'?['COLD START','cold']:[`${p.threads.length} open threads`,''], syn?[`synthetic: ${m.synthetic_sources}`,'syn']:['real data','real']]
+    .map(([c,k])=>`<span class="chip ${k}">${esc(c)}</span>`).join('');
+  const isNew=t=>!!t&&[...changed].some(l=>l.includes(t));
+  const items=(sec)=>(S[sec]||'').split('\n').filter(l=>l.startsWith('- ')).map(l=>l.slice(2));
+  const th=p.threads.map((t,i)=>`<div class="thread ${isNew(t.title)?'new':''}"><div class="top"><span class="n">${i+1}</span><span class="title">${esc(t.title)}</span>
+      <span class="badge ${STATUS[t.status]||''}">${esc(nice(t.status))}</span><span class="meta">${esc(t.last)} · ${esc(t.channel)}</span></div>
+      <div class="d">${esc(t.detail)}</div><div class="nx">→ ${esc(t.next)}</div></div>`).join('') || '<div class="mute" style="margin-top:8px">No open threads, so the bot gives a clean, generic welcome.</div>';
+  const tl=items('Recent timeline').map(l=>{const [dt,ch,...rest]=l.split(' · ');return `<div class="${isNew(l)?'new':''}"><b>${esc(dt)}</b> · ${esc(ch||'')} ${rest.length?'· '+esc(rest.join(' · ')):''}</div>`}).join('')||'<div class="mute">no recent activity</div>';
+  $('memcard').innerHTML=`
+    <div class="opening ${isNew(p.opening)?'new':''}"><div class="l">Bot opens with</div><div class="q">${esc(p.opening)}</div></div>
+    <div class="sub">Open threads · unfinished work, most urgent first</div>${th}
+    <div class="grid2">
+      <div><div class="sub">Known · don't ask again</div><ul class="list">${items("Known – don't ask").map(k=>`<li class="${isNew(k)?'new':''}">${esc(k)}</li>`).join('')}</ul></div>
+      <div><div class="sub">Guardrails</div><ul class="list g">${items('Guardrails').map(k=>`<li>${esc(k)}</li>`).join('')||'<li>none</li>'}</ul></div>
+    </div>
+    <div class="grid2"><div><div class="sub">Who</div><ul class="list w">${items('Who').map(k=>`<li>${esc(k)}</li>`).join('')}</ul></div>
+      <div><div class="sub">Recent timeline</div><div class="tl">${tl}</div></div></div>`;
+  $('raw').innerHTML=lines.map(l=>`<span class="l ${changed.has(l)?'new':''}">${esc(l)||' '}</span>`).join('');
+  if(changed.size){ const tt=$('toast'); tt.textContent=ms!=null?`✓ updated · event → file ${ms.toFixed(1)} ms`:'✓ updated'; tt.classList.add('show');
+    setTimeout(()=>tt.classList.remove('show'),3500); setTimeout(()=>document.querySelectorAll('.new').forEach(e=>e.classList.remove('new')),3000); }
+}
+
+function injLabels(){ const s=role==='seller'; $('inj-btn').textContent=s?'+ New buyer enquiry':'+ New requirement'; $('inj-city').placeholder=s?'Buyer city':'Delivery city';
+  $('inj-hint').textContent=s?'A buyer just wrote to this seller':'This buyer is searching right now'; }
+async function inject(){
+  if(!glid) return; const v=id=>$(id).value.trim();
+  const d=await api('/api/event',{method:'POST',body:JSON.stringify({glid,role,kind:role==='seller'?'enquiry':'requirement',product:v('inj-product'),city:v('inj-city'),qty:v('inj-qty'),message:v('inj-msg')})});
+  ['inj-product','inj-city','inj-qty','inj-msg'].forEach(i=>$(i).value='');
+  $('inject-msg').innerHTML=`<div class="note">✓ ${esc(d.product)} added → ${role}.md updated in <b>${d.event_to_file_ms?.toFixed(1)} ms</b></div>`;
+}
+
+async function loadPhone(){
+  const d=await api('/api/phone/info');
+  const cur=$('ph-num').value; $('ph-num').innerHTML=d.numbers.map(n=>`<option ${n===cur?'selected':''}>${esc(n)}</option>`).join('');
+  $('pill-phone').textContent=d.mode==='direct'?'📞 direct dial':'📞 via Sarvam test line'; $('pill-phone').className='pill '+(d.mode==='direct'?'ok':'warn');
+  $('ph-recent').innerHTML=d.recent.length?`<div class="sub">Phone calls saved to memory</div>`+d.recent.map(c=>`<div><span>${esc(c.glid)} · ${esc(c.role)}</span><span class="mute">${Math.round(c.duration||0)}s · ${esc((c.ended_by||'').replace('_',' ').toLowerCase())} · ${c.event_id?'✓ saved':'no speech'}</span></div>`).join(''):'';
+}
+function updateCallHeader(){
+  const real=!glid.startsWith('SYN-'); $('call-av').textContent=role==='seller'?'S':'B'; $('call-av').className='av '+role;
+  $('call-name').textContent=label; $('call-sub').textContent=`The agent will treat you as this ${role} · GLID ${glid}`;
+}
+function steps(n){ ['st1','st2','st3','st4'].forEach((s,i)=>{ $(s).className='step'+(i<n?' done':i===n?' cur':''); }); }
+async function phoneCall(){
+  if(!glid) return; const number=($('ph-custom').value.trim()||$('ph-num').value);
+  $('ph-btn').disabled=true; steps(0);
+  try{
+    const d=await api('/api/phone/call',{method:'POST',body:JSON.stringify({glid,role,number})});
+    if(d.mode==='direct'){ steps(1); $('ph-note').innerHTML=`<div class="note">Dialling ${esc(d.number)}. Pick up and play the ${role}. When you hang up, the call is saved to memory automatically.</div>`; }
+    else if(d.mode==='queued'){ steps(1); $('ph-note').innerHTML=`<div class="note info">Queued for ${esc(d.number)} (request <b>${esc(d.id)}</b>). Our workspace has no phone connection yet, so this call goes out on Sarvam's test line. Tell Claude <b>“call”</b>.<br>When you hang up, the transcript is saved to memory automatically.</div>`; }
+    else { steps(-1); $('ph-note').innerHTML=`<div class="note warn">${esc(d.reason)}</div>`; }
+  }catch(e){ $('ph-note').innerHTML=`<div class="note warn">${esc(e.message)}</div>`; }
+  setTimeout(()=>$('ph-btn').disabled=false,4000);
+}
+
+function callButtons(a){ $('btn-start').disabled=a; $('btn-end').disabled=!a; }
+async function startCall(){ if(callId) return; callButtons(true); $('vmsgs').innerHTML=''; $('voice-wb').innerHTML='<div class="note info">Connecting…</div>';
+  try{ const d=await api('/api/voice/start',{method:'POST',body:JSON.stringify({glid,role})}); callId=d.call_id; $('voice-wb').innerHTML=''; }
+  catch(e){ callButtons(false); $('voice-wb').innerHTML=`<div class="note warn">${esc(e.message)}</div>`; } }
+async function endCall(){ const id=callId||'none'; callId=null; $('btn-end').disabled=true; $('voice-wb').innerHTML='<div class="note info">Saving to memory…</div>';
+  try{ const d=await api(`/api/voice/${id}/end`,{method:'POST'}); $('voice-wb').innerHTML=wbHtml(d); }catch(e){ await api('/api/voice/stop_all',{method:'POST'}).catch(()=>{}); } callButtons(false); }
+
+function addMsg(box,speaker,text,meta=''){ $(box).insertAdjacentHTML('beforeend',`<div class="msg ${speaker}">${esc(text)}<div class="t">${esc(meta||now())}</div></div>`); $(box).scrollTop=1e9; }
+async function startChat(){
+  if(!glid) return; if(chatId) await endChat(true);
+  $('msgs').innerHTML=''; $('chat-wb').innerHTML='';
+  const d=await api('/api/chat/start',{method:'POST',body:JSON.stringify({glid,role})});
+  chatId=d.chat_id; $('chat-kind').textContent='online · opens from memory, no wait';
+  $('msgs').insertAdjacentHTML('beforeend',`<div class="msg sys">Chat with ${esc(role)} ${esc(glid)} · the bot has read ${esc(role)}.md</div>`);
+  addMsg('msgs','bot',d.opening);
+}
+async function send(){
+  const t=$('inp').value.trim(); if(!t||!glid) return; if(!chatId) await startChat();
+  $('inp').value=''; addMsg('msgs','user',t);
+  $('msgs').insertAdjacentHTML('beforeend','<div class="msg" id="typing">typing…</div>'); $('msgs').scrollTop=1e9;
+  const d=await api(`/api/chat/${chatId}/say`,{method:'POST',body:JSON.stringify({text:t})});
+  $('typing')?.remove(); addMsg('msgs','bot',d.reply,`${now()} · ${d.latency_ms} ms`);
+}
+$('inp').addEventListener('keydown',e=>{if(e.key==='Enter') send();});
+async function endChat(silent=false){
+  if(!chatId) return; const id=chatId; chatId=null;
+  if(!silent) $('chat-wb').innerHTML='<div class="note info">Saving conversation to memory…</div>';
+  const d=await api(`/api/chat/${id}/end`,{method:'POST'}); if(!silent) $('chat-wb').innerHTML=wbHtml(d);
+}
+function wbHtml(d){
+  if(!d||d.skipped) return `<div class="note warn">Nothing saved (${esc(d&&d.skipped)})</div>`;
+  const x=d.extracted||{};
+  return `<div class="note">✓ <b>Saved to memory</b>: conversation → file in <b>${d.conversation_end_to_file_ms} ms</b><br>${esc(x.one_line)}<br>next step: ${esc(x.next_step||'–')} · ${esc(x.language||'')} · ${esc(x.sentiment||'')}</div>`;
+}
+
+async function loadBrief(){
+  if(!glid) return; const b=await api(`/api/brief/${encodeURIComponent(glid)}/${role}`);
+  const li=a=>a&&a.length?`<ul class="list w">${a.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<div class="mute">–</div>';
+  let h=`<div class="note info" style="margin-top:0">Read this, then play the customer on a call or chat. Real data stays on this laptop.</div>
+   <div class="sub">You are a ${esc(b.role)} · speak ${esc(b.language)}</div>${b.cold?'<div class="note warn">COLD START: act like a first-time user.</div>':''}${li(b.who)}
+   <div class="sub">What's pending for you</div>${b.pending.map((t,i)=>`<div class="thread"><div class="top"><span class="n">${i+1}</span><span class="title">${esc(t.title)}</span><span class="badge ${STATUS[t.status]||''}">${esc(nice(t.status))}</span></div><div class="d">${esc(t.story)}</div><div class="small mute">${esc(t.detail)}</div></div>`).join('')||'<div class="mute">nothing open</div>'}`;
+  if(b.past_vani_calls) h+=`<div class="sub">Your last VANI calls</div>${b.past_vani_calls.map(c=>`<div class="small">${esc(c.date)} · <b>${esc(c.outcome)}</b> · ${esc(c.summary)}</div>`).join('')||'–'}`;
+  if(b.your_enquiries) h+=`<div class="sub">Your enquiries</div>${b.your_enquiries.map(e=>`<div class="small" style="margin-bottom:6px">${esc(e.date)} · <b>${esc(e.product)}</b>${e.qty?` · qty ${esc(e.qty)}`:''}<br><span class="mute">${esc(e.you_wrote)}</span></div>`).join('')||'–'}`;
+  h+=`<div class="sub">How you behaved before</div>${li(b.behaviour)}<div class="sub">Test script</div><table><tr><th>You say / do</th><th>Pass if</th></tr>${b.script.map(([s,p])=>`<tr><td>${esc(s)}</td><td>${esc(p)}</td></tr>`).join('')}</table>`;
+  $('briefv').innerHTML=h;
+}
+async function loadCard(){
+  if(role!=='seller'){ $('cardv').innerHTML='<div class="note info">The executive call-prep card is for sellers. Pick a seller.</div>'; return; }
+  const c=await api(`/api/card/${encodeURIComponent(glid)}`);
+  $('cardv').innerHTML=`<div class="note info" style="margin-top:0">For an IndiaMART executive before dialling. Read from seller.md by heading, <b>no LLM</b>.</div>
+   <div class="sub">Before you dial · ${esc(glid)}</div><ul class="list w">${c.who.split('\n').map(l=>`<li>${esc(l.replace(/^- /,''))}</li>`).join('')}</ul>
+   <div class="sub">Talk about</div>${c.threads.map((t,i)=>`<div class="thread"><div class="top"><span class="n">${i+1}</span><span class="title">${esc(t.title)}</span><span class="badge ${STATUS[t.status]||''}">${esc(nice(t.status))}</span></div><div class="d">${esc(t.detail)}</div><div class="nx">→ ${esc(t.next)}</div></div>`).join('')||'none'}
+   <div class="sub">Watch out</div><ul class="list g">${c.guardrails.map(g=>`<li>${esc(g)}</li>`).join('')}</ul>
+   <div class="opening"><div class="l">Say first</div><div class="q">${esc(c.say_first)}</div></div>`;
+}
+async function loadQueue(){
+  $('queuev').textContent='Ranking all sellers…'; const q=await api('/api/queue');
+  $('queuev').innerHTML=`<div class="note info" style="margin-top:0">The sales team's call list for today: every seller ranked by their most urgent open thread. Same files, <b>no LLM</b>.</div>
+   <div class="chips" style="margin:10px 0">${Object.entries(q.by_top_status).map(([k,v])=>`<span class="badge ${STATUS[k]||''}">${esc(nice(k))} · ${v}</span>`).join('')}</div>
+   <table><tr><th>GLID</th><th>Top thread</th><th>Next step</th></tr>${q.rows.map(r=>`<tr><td>${esc(r.glid)}</td><td><span class="badge ${STATUS[r.top]||''}">${esc(nice(r.top))}</span><div class="small mute">${esc(r.title)}</div></td><td class="small">${esc(r.next)}</td></tr>`).join('')}</table>`;
+}
+async function loadFresh(){
+  const f=await api('/api/freshness'), s=f.summary.event_to_file_ms, rec=f.recent.slice().reverse(), mx=Math.max(1,...rec.map(r=>r.freshness_ms));
+  $('freshv').innerHTML=`<div class="sub" style="margin-top:0">Event → updated file (p50)</div><div class="kpi">${s.p50?s.p50.toFixed(1)+' ms':'–'}</div>
+   <div class="mute small">p95 ${s.p95?.toFixed(1)??'–'} ms · max ${s.max?.toFixed(1)??'–'} ms · n=${s.n}</div>
+   <div class="bars">${rec.map(r=>`<div title="${r.freshness_ms.toFixed(1)} ms" style="height:${Math.max(4,r.freshness_ms/mx*100)}%"></div>`).join('')}</div>
+   <div class="note info">A conversation (call or chat) reaches the file in about 1–2 s, mostly the one LLM summary. The rebuild itself takes milliseconds.</div>
+   <div class="sub">File sizes</div><div class="small">buyer p50 ${f.summary.tokens.buyer.p50} / max ${f.summary.tokens.buyer.max} tokens · seller p50 ${f.summary.tokens.seller.p50} / max ${f.summary.tokens.seller.max} tokens (budget 450 / 500)</div>
+   <div class="sub">Latest updates</div><table><tr><th>GLID</th><th>Role</th><th>Event → file</th><th>Tokens</th></tr>${f.recent.slice(0,12).map(r=>`<tr><td>${esc(r.glid)}</td><td>${r.role}</td><td>${r.freshness_ms.toFixed(1)} ms</td><td>${r.tokens}</td></tr>`).join('')}</table>`;
+}
+
+const es=new EventSource('/api/stream');
+es.onmessage=e=>{
+  const m=JSON.parse(e.data);
+  if(m.type==='rebuild'){
+    if(m.freshness_ms!=null){ const p=$('pill-fresh'); p.textContent=`⚡ event → file ${m.freshness_ms.toFixed(1)} ms`; p.classList.remove('flash'); void p.offsetWidth; p.classList.add('flash'); log(`${m.glid} ${m.role}.md rebuilt (${m.build_ms.toFixed(1)} ms)`); }
+    if(m.glid===glid&&m.role===role) loadMemory(true,m.freshness_ms);
+  }
+  if(m.type==='turn') addMsg('vmsgs',m.speaker,m.text);
+  if(m.type==='call'){ log(`laptop call ${m.state}`); if(m.state==='ended'){ callId=null; callButtons(false); } }
+  if(m.type==='phone_request') log(`phone call ${m.mode} → ${m.number||''}`);
+  if(m.type==='phone_placed'){ steps(2); log('phone call placed'); }
+  if(m.type==='phone_saved'){ steps(4); log(`phone call saved → ${m.glid} (${Math.round(m.duration||0)}s, ${m.turns} turns)`);
+    $('ph-note').innerHTML=`<div class="note">✓ Phone call (${Math.round(m.duration||0)} s) saved to <b>${esc(m.glid)}</b>'s memory. Open <b>Chat</b>: it continues from this call.</div>`; loadPhone(); }
+  if(m.type==='writeback'&&m.event_id) log(`conversation saved → event #${m.event_id}`);
+};
+api('/api/checks').then(c=>{ if(c.total) $('pill-checks').textContent=`✓ checks ${c.passed}/${c.total}`; });
+loadPersonas(); loadPhone();
+</script>
+</body>
+</html>

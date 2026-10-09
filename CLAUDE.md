@@ -179,34 +179,40 @@ This is a **dev-time tool, not part of the runtime.** It lets Claude Code config
 
 These organiser resources were still "to be shared" as of 8 Oct: the starter API list, sample GLIDs, sample voice and WhatsApp conversations, and the current bot prompt. Add their locations here once they arrive.
 
-## Planned architecture (proposed; update this section once the code exists)
+## Architecture (decided 9 Oct): product name "Yaad"
+
+**Thesis:** memory that finishes the customer's unfinished work, in their language, with proof. The unit of memory is a **thread** (a buyer requirement, or a seller opportunity/blocker), not a summary of the person. Data backs it: 80% of enquiries have no seller reply in the thread, and 42% of VANI calls end "Not Interested".
 
 ```
-sources (starter APIs + labelled synthetic)  ──►  connectors/  (one per source; applies its lookback window)
-        │
-        ▼
-event store keyed by GLID  ◄── channel transcripts written back (browser call / phone call / chat)
-        │  (each new event triggers a rebuild of that GLID only; a scheduled sweep acts as backstop)
-        ▼
-profile builder  ── deterministic aggregation for facts (counts, statuses, categories)
-                 └─ LLM only for "last conversation / open threads" summary + suggested opening
-        │
-        ▼
-renderer → buyer.md / seller.md  (fixed section order, token budget, front-matter with
-                                  glid, role, generated_at, last_event_at, freshness_ms, synthetic flag)
-        │
-        ├──► session runner (local) → hosted Sarvam agent, file passed as agent_variables at start
-        │       ├─ browser call via SDK: transcript streamed back live → event → rebuild
-        │       └─ phone call via instant outbound: analytics API polled → event → rebuild
-        ├──► local web chat (Sarvam LLM): same file → resumes the thread, writes events back
-        └──► non-bot consumer (e.g. exec call-prep view) reading the same file
+CSVs (stand-in for starter APIs) ─► ingest.py ─► SQLite events (one row per event, per GLID+role)
+                                                     ▲            │ add_event() → rebuild(glid, role) synchronously
+          write-back (transcript / outcome) ─────────┘            ▼
+                                                  threads.py (rules → open/update/close, score)
+                                                  extract.py (sarvam-105b, free text only, cached per event)
+                                                            │
+                                                  render.py + guard.py → profiles/{glid}.{role}.md
+                                                            │      (fixed schema, token cap, firewall, freshness log)
+        ┌───────────────────┬───────────────────┬───────────┴────────┬──────────────────────┐
+   Voice (SDK CALL)    Chat (SDK CHAT,      Exec card +        Due-today queue      (Tier 2) Bulbul audio
+   same hosted agent   same agent; LLM      audio brief        across all GLIDs     brief, Sarvam campaign
+                       fallback)
 ```
 
-Design principles:
-- **Facts are deterministic; the LLM does narrative only.** This keeps the files consistent, quick to rebuild and free of invented details.
-- Every channel writes its conversation back as an event. That write-back is what lets a WhatsApp chat today continue yesterday's voice call.
-- Freshness is measured as `generated_at − last_event_at` and reported by the system itself, so we have the evidence ready for the demo.
-- Use one fixed schema for each role. Other consumers should parse sections by heading and never need to call an LLM.
+- **Stack:** Python 3.12 venv (`.venv`, managed with `uv`), FastAPI + one static HTML page, SQLite at `data/yaad.db` (gitignored). No queue and no watcher: `add_event()` rebuilds that GLID inline.
+- **Sarvam SDK facts (checked 9 Oct):** `InteractionType` has `CALL` **and `CHAT`**, and `AsyncSamvaadAgent.send_text()` exists, so one hosted agent serves both channels. `UserIdentifierType.CUSTOM` is used for GLID. `ServerTranscriptMsg(role=user|bot, content)`. `ServerInteractionEndEvent` marks the end.
+- **Facts are deterministic; the LLM only extracts fields from free text** (bot call summaries, enquiry text, our transcripts) and is cached per event. Openings come from templates, so nothing can be invented.
+- **File schema** (both roles): front-matter (`glid, role, generated_at, last_event_at, freshness_ms, synthetic_sources`), then `## Who`, `## Known – don't ask`, `## Open threads` (max 3), `## Recent timeline` (max 5 lines), `## Guardrails`, `## Suggested opening`. Budget: **≤ 450 tokens buyer, ≤ 500 seller** (est. chars/4), enforced in code.
+- **Lookbacks:** profile = snapshot; bot calls 180d (objections persist); enquiries and PNS 90d, detail 30d; BL 45d (warehouse limit); WhatsApp 30d (intents go stale); exec calls 60d; our own channels unlimited (newest wins).
+- **Firewall:** seller.md has only aggregates about buyers (city, product, counts), never buyer GLID, name, company or designation. buyer.md may name seller companies the buyer already contacted. `guard.py` checks this on every render.
+- **Unread** = empty `first_read_date` (the `read_status` codes -3/-2/-1/0 are undocumented).
+- **Hosted agent:** "Yaad IndiaMART Memory Assistant", app_id `Yaad-IndiaM-61a96599-5c50` (draft v1, not committed as of 9 Oct). Input vars `context, role, channel, glid, opening, language`; post-call output vars `next_step, callback_time, product, outcome`. Voice v2 `internal_id` 01a0cf16-97b2-72b5-bdc4-4785b7a334ed (Sarika, Hindi conversational). Prompt uses `{{var}}`. `send_chat` cannot inject variables, so `context` defaults to the synthetic seller for testing.
+- **Runtime findings (9 Oct, tested):** the Voice Agents key (`SARVAM_API_KEY`, header `X-API-Key` on apps.sarvam.ai) is **not** a model API key, and api.sarvam.ai returns 403 for it, so chat and extraction use `SARVAM_LLM_API_KEY` from dashboard.sarvam.ai. The runtime returns 404 "App not found for the interaction type" unless `version` is pinned while the agent is uncommitted (`SARVAM_APP_VERSION=1`). This workspace only allows `channel_type: v2v`, so **CHAT sessions are refused**, and the chat channel uses `sarvam-105b-conversations` directly with the same prompt and memory. A CALL session connects and streams the greeting audio, but `send_text` gets no reply in CALL mode.
+- **Phone test calls (MCP `place_test_call`, tested 9 Oct):** teammates' verified numbers are in `.env` as `SARVAM_TEST_NUMBERS` (never commit phone numbers). **`app_variables` passed to a test call are ignored**, and the call runs on the agent's *default* variables, so to call as a GLID, set the draft's default `context/role/glid/opening` first and then call. One of Sarvam's shared caller lines twice connected but passed no user speech (the bot hung up after 13 to 15 s); calls from other lines worked. Silence nudges are on (7 s, then 9 s). The intro is now "Hello, this is Yaad from IndiaMART. Do you have two minutes to talk?" (auto-translated); the memory opening follows in the next turn. Write-back after a phone call: read the transcript with `analytics(interaction)`, then `channels.session.ingest_transcript(...)`. When our extraction fails, it uses Sarvam's post-call variables. Laptop SDK calls pass `initial_bot_message = opening`.
+- **LLM gotcha:** with reasoning on, `sarvam-105b` returns empty content (`finish_reason: length`) because reasoning eats `max_tokens`. Extraction and chat use `reasoning_effort: null`. Extraction model is `sarvam-105b-conversations` (~650 ms, schema followed).
+- **Before every demo / after every change:** `python -m yaad check`. It runs 59 checks: Part A covers the real demo files (structure only), and Part B covers synthetic scenarios in a scratch DB (typed enquiry, phone to chat resume, qty change, privacy, cold start, bot hygiene). It must be 59/59. Results go to `samples/check_results.json`.
+- **Restart the app with `scripts/restart.sh`** (it kills every old server). A plain kill left old servers alive, because open SSE streams block uvicorn shutdown, and their pollers kept running old code.
+- **Run:** `python -m yaad ingest|synth|pick|build|extract|serve|stats`; tests in `tests/` (synthetic only).
+- **Claude never reads raw customer text.** Development uses synthetic fixtures. Real-data output is checked by scripts (structure, size, firewall), not by printing the content.
 
 ## Working conventions
 

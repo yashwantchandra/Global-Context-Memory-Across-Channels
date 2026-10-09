@@ -8,3 +8,9 @@ __pycache__/
 Global Context - Seller Dataset/*.csv
 Global_Context_Problem_Statement_Buyer Side*.csv
 data/
+.sarvam-mcp-out/
+
+# Yaad runtime data (real customer data: local only)
+data/
+profiles/
+.dev_profiles/

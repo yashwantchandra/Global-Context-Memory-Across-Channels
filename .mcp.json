@@ -3,6 +3,15 @@
     "sarvam-voice-agents": {
       "type": "http",
       "url": "https://mcp.sarvam.ai/voice-agents"
+    },
+    "sarvam-api": {
+      "type": "stdio",
+      "command": "bash",
+      "args": ["scripts/sarvam-api-mcp.sh"]
+    },
+    "sarvam-docs": {
+      "type": "http",
+      "url": "https://docs.sarvam.ai/_mcp/server"
     }
   }
 }

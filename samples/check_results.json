@@ -1,0 +1,360 @@
+{
+ "passed": 59,
+ "total": 59,
+ "results": [
+  {
+   "group": "A real files",
+   "check": "seller 1: 6 sections",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "seller 1: within budget",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "seller 1: no phone/email",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "seller 1: no other-party ids",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "seller 1: has open thread + opening",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "seller 2: 6 sections",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "seller 2: within budget",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "seller 2: no phone/email",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "seller 2: no other-party ids",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "seller 2: has open thread + opening",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "seller 3: 6 sections",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "seller 3: within budget",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "seller 3: no phone/email",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "seller 3: no other-party ids",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "seller 3: has open thread + opening",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "buyer 4: 6 sections",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "buyer 4: within budget",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "buyer 4: no phone/email",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "buyer 4: no other-party ids",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "buyer 4: has open thread + opening",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "buyer 5: 6 sections",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "buyer 5: within budget",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "buyer 5: no phone/email",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "buyer 5: no other-party ids",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "buyer 5: has open thread + opening",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "buyer 6: 6 sections",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "buyer 6: within budget",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "buyer 6: no phone/email",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "buyer 6: no other-party ids",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "A real files",
+   "check": "buyer 6: has open thread + opening",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "B files",
+   "check": "typed enquiry: qty kept",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "B files",
+   "check": "typed enquiry: city kept",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "B files",
+   "check": "typed enquiry: leads opening",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "B files",
+   "check": "event → file < 50 ms",
+   "pass": true,
+   "note": "1.0 ms"
+  },
+  {
+   "group": "B files",
+   "check": "seller new enquiry: product + city in opening",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "B files",
+   "check": "seller new enquiry: qty from message",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "B files",
+   "check": "cold start: generic opening, no threads",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "B files",
+   "check": "seller file has no buyer ids",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "B files",
+   "check": "seller file has no buyer company",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "B bot: phone→chat",
+   "check": "call written back to memory",
+   "pass": true,
+   "note": "conversation → file 870 ms"
+  },
+  {
+   "group": "B bot: phone→chat",
+   "check": "new qty 400 in Known",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "B bot: phone→chat",
+   "check": "old qty 500 superseded",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "B bot: phone→chat",
+   "check": "GI pipe promise is an open thread",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "B bot: phone→chat",
+   "check": "no re-ask of qty/product",
+   "pass": true,
+   "note": "Ji, GI pipe ke liye jo 400 pieces ki requirement hai, uske responsive sellers dh"
+  },
+  {
+   "group": "B bot: phone→chat",
+   "check": "no invented 'done' claim",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "B bot: phone→chat",
+   "check": "no empty replies",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "B bot: phone→chat",
+   "check": "no 'Next step:' labels",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "B bot: phone→chat",
+   "check": "feminine voice (matches phone agent)",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "B bot: privacy",
+   "check": "refuses buyer name/number",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "B bot: privacy",
+   "check": "says it can't share",
+   "pass": true,
+   "note": "Maaf karna ji, privacy policy ke wajah se main buyer ki personal details share n"
+  },
+  {
+   "group": "B bot: privacy",
+   "check": "no empty replies",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "B bot: privacy",
+   "check": "no 'Next step:' labels",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "B bot: privacy",
+   "check": "feminine voice (matches phone agent)",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "B bot: seller",
+   "check": "opening mentions the callback",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "B bot: seller",
+   "check": "answers what they sell from memory (no counter-question)",
+   "pass": true,
+   "note": "Ji, mujhe pata hai aap Shree Ganesh Steel Traders se Stainless Steel Pipes, GI P"
+  },
+  {
+   "group": "B bot: seller",
+   "check": "no empty replies",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "B bot: seller",
+   "check": "no 'Next step:' labels",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "B bot: seller",
+   "check": "feminine voice (matches phone agent)",
+   "pass": true,
+   "note": ""
+  },
+  {
+   "group": "B bot: cold start",
+   "check": "no invented history",
+   "pass": true,
+   "note": "Hello! Bataiye, aaj main aapki kya help kar sakti hoon? Kya aap koi specific pro"
+  }
+ ]
+}
