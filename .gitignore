@@ -8,3 +8,10 @@ __pycache__/
 Global Context - Seller Dataset/*.csv
 Global_Context_Problem_Statement_Buyer Side*.csv
 data/
+
+# editor swap/backup files (a .env.swp holds the API keys)
+*.swp
+*.swo
+*~
+.env.*
+!.env.example

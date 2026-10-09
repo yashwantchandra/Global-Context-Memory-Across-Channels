@@ -1,0 +1,48 @@
+---
+glid: SELLER_1
+role: seller
+generated_at: 2026-10-09T17:01:29.339
+last_event_at: 2026-10-09T15:14:18.634
+freshness_ms: 6430704
+data_quality: ok
+synthetic: true
+sources: [buyer_calls, buyleads, enquiries, exec_calls, profile, sessions, vani_calls]
+lookback: {buyer_calls: 90d, buyleads: 45d, enquiries: 90d, exec_calls: 60d, sessions: 30d, vani_calls: 90d}
+evicted: {open_threads: 1}
+---
+# Seller context · GLID SELLER_1
+
+## Identity
+- Business: [Name 1] · Preferred language: Hinglish (last conversation)
+
+## Snapshot
+- [Name 1] · Gurugram, Haryana · Proprietorship · turnover 0 - 40 L
+- Categories: Biomass Briquettes, Firewoods, Wood Chips · free listing · GST verified · mobile verified
+
+## Leads & Enquiries
+- Enquiries (90d): 28 received, 23 opened, replied on 2 (30d) · top: Babool Cut Dry Firewood, Eucalyptus Fire Wood
+- Latest enquiry 02 Oct: Eucalyptus Fire Wood · a buyer from Delhi · opened
+- Buy-leads bought (45d): 71 · groundnut briquette
+
+## Responses & Calls
+- Buyer calls (90d): 16 received, 10 connected (62%), avg talk 57s
+- VANI bot calls (90d): 1 answered · Meeting Fixed 1 · last: Meeting Fixed (18 Aug)
+- Executive calls (60d): 20, 10 answered · last 03 Sep Answered
+
+## Past Conversations
+- 09 Oct · Voice call (our bot): The user requested Punjab buyers for 20 tons/month of Eucalyptus Fire Wood a… (synthetic)
+- 18 Aug · VANI call: The agent from IndiaMART called the lead from [Name 1] to schedule a meeting with a sa…
+
+## Open Threads
+- Callback promised: 10 Oct, 11 AM (said on voice call, 09 Oct)
+- Finding Punjab buyers (from voice call, 09 Oct)
+- Discussing loose bulk packaging for Firewood Biomass Briquettes (from voice call, 09 Oct)
+
+## Engagement Signals
+- WhatsApp read rate 100% (30d)
+
+## Do-Not-Ask
+- city: Gurugram, Haryana; categories: Biomass Briquettes, Firewoods, Wood Chips; business type; GST status; requirement: Eucalyptus Fire Wood; quantity: 20 tons per month; callback: 10 Oct, 11 AM; language: Hinglish; name; preferred language: Hinglish
+
+## Suggested Opening
+"Namaste [Name 1] ji! Main IndiaMART se Vani bol rahi hoon, kal 11 baje ki WhatsApp call ke regarding baat karni thi."

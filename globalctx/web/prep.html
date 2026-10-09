@@ -1,0 +1,24 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Call prep</title><link rel="stylesheet" href="/static/style.css"></head><body>
+<header><a href="/">← Home</a><b>Executive call prep · {{role}} {{glid}}</b>
+<span class="muted">non-bot use: reads the same file by heading, no LLM</span></header>
+<main class="grid two">
+  <div class="card sec" id="left"></div>
+  <div class="card sec" id="right"></div>
+</main>
+<script>
+const role='{{role}}', glid='{{glid}}';
+const ul = rows => '<ul>' + rows.map(r => `<li>${r.replace(/</g,'&lt;')}</li>`).join('') + '</ul>';
+(async () => {
+  const p = await (await fetch(`/api/profile/${role}/${glid}/parsed`)).json();
+  const s = p.sections, m = p.meta;
+  const first = ['Open Threads','Suggested Opening','Do-Not-Ask','Engagement Signals'];
+  $=id=>document.getElementById(id);
+  $('left').innerHTML = `<div class="big">Before you call</div>
+    <p><span class="chip">${m.data_quality}</span><span class="chip">updated ${String(m.generated_at||'').slice(0,16).replace('T',' ')}</span>
+    ${m.synthetic==='true'?'<span class="chip warn">contains synthetic data</span>':''}</p>` +
+    first.filter(k=>s[k]).map(k => `<h3>${k==='Open Threads'?'Talk about first':k==='Do-Not-Ask'?'Do not ask again':k}</h3>${ul(s[k])}`).join('');
+  $('right').innerHTML = '<div class="big">Profile</div>' + Object.keys(s).filter(k=>!first.includes(k))
+    .map(k => `<h3>${k}</h3>${ul(s[k])}`).join('');
+})();
+</script></body></html>

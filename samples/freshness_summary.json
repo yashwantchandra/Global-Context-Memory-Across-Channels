@@ -1,0 +1,7 @@
+{
+  "events": 29,
+  "fast_ms_median": 13,
+  "fast_ms_max": 41,
+  "llm_ms_median": 519,
+  "llm_ms_max": 781
+}

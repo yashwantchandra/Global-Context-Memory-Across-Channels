@@ -1,0 +1,45 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chat channel</title><link rel="stylesheet" href="/static/style.css"></head><body>
+<header><a href="/">← Home</a><b>Chat · {{role}} {{glid}}</b><span class="muted">channel 2: resumes from the same file</span></header>
+<main class="grid two">
+  <div class="card">
+    <h2>Conversation <span id="state" class="chip">not started</span></h2>
+    <div id="log"></div>
+    <div class="row"><input id="text" placeholder="Type as the {{role}}… (Hinglish ok)" disabled>
+      <button class="primary" id="send" disabled>Send</button></div>
+    <div class="row"><button id="start" class="primary">Start chat</button><button id="end" disabled>End chat & update file</button>
+      <span id="result" class="muted"></span></div>
+  </div>
+  <div class="card"><h2>{{role}}.md <span class="muted">(what the bot loaded)</span></h2><pre id="md">loading…</pre></div>
+</main>
+<script>
+const role='{{role}}', glid='{{glid}}'; let sid=null;
+const $=id=>document.getElementById(id);
+const add=(who,text)=>{const d=document.createElement('div');d.className='m '+who;d.textContent=text;$('log').appendChild(d);$('log').scrollTop=1e9};
+async function md(){ $('md').textContent = await (await fetch(`/api/profile/${role}/${glid}`)).text(); }
+$('start').onclick = async () => {
+  $('start').disabled=true; $('log').innerHTML=''; $('state').textContent='loading context…';
+  const r = await (await fetch('/api/session/start',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({glid,role,channel:'chat'})})).json();
+  sid=r.session_id; $('md').textContent=r.context; add('bot', r.opening);
+  $('state').textContent='live'; $('text').disabled=$('send').disabled=$('end').disabled=false; $('text').focus();
+};
+async function send(){
+  const t=$('text').value.trim(); if(!t) return; $('text').value=''; add('user',t);
+  $('send').disabled=true;
+  const r = await (await fetch(`/api/session/${sid}/message`,{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({text:t})})).json();
+  add('bot', r.reply); $('send').disabled=false; $('text').focus();
+}
+$('send').onclick=send; $('text').onkeydown=e=>{if(e.key==='Enter')send()};
+$('end').onclick = async () => {
+  $('end').disabled=$('send').disabled=$('text').disabled=true; $('state').textContent='summarising…';
+  const r = await (await fetch(`/api/session/${sid}/end`,{method:'POST'})).json();
+  $('state').textContent='ended';
+  const reqs = (r.request_files||[]).map(p => p.split('/').slice(-2).join('/')).join(', ');
+  $('result').textContent = r.summary ? `${r.role}.md updated in ${r.freshness_ms} ms · ${r.summary.summary||''}`
+    + (reqs ? ` · requests saved: ${reqs}` : '') : 'nothing to save';
+  await md(); $('start').disabled=false;
+};
+md();
+</script></body></html>

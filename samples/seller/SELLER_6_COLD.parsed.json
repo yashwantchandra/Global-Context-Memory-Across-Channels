@@ -1,0 +1,43 @@
+{
+  "meta": {
+    "glid": "SELLER_6_COLD",
+    "role": "seller",
+    "generated_at": "2026-10-09T17:01:30.256",
+    "last_event_at": "null",
+    "freshness_ms": "null",
+    "data_quality": "cold_start",
+    "synthetic": "false",
+    "sources": "[]",
+    "lookback": "{}",
+    "evicted": "{}"
+  },
+  "sections": {
+    "Identity": [
+      "Business: unknown · Preferred language: Hinglish (default)"
+    ],
+    "Snapshot": [
+      "No profile data (cold start)"
+    ],
+    "Leads & Enquiries": [
+      "No data in lookback window"
+    ],
+    "Responses & Calls": [
+      "No data in lookback window"
+    ],
+    "Past Conversations": [
+      "No conversations in the last 30-90 days"
+    ],
+    "Open Threads": [
+      "None"
+    ],
+    "Engagement Signals": [
+      "No engagement data"
+    ],
+    "Do-Not-Ask": [
+      "preferred language: Hinglish"
+    ],
+    "Suggested Opening": [
+      "Namaste! Main IndiaMART se Vani bol rahi hoon. Aap kuch khareedna chahte hain, ya apne business ke liye madad chahiye?"
+    ]
+  }
+}

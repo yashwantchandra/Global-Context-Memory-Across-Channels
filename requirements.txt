@@ -1,0 +1,8 @@
+fastapi==0.143.0
+httpx==0.28.1
+pydantic==2.13.5
+pytest==9.1.1
+python-dotenv==1.2.4
+sarvam-conv-ai-sdk==1.1.1
+sarvamai==0.1.36
+uvicorn==0.54.0

@@ -10,7 +10,7 @@ Source docs (read them again if anything here seems off):
 - Deck (rules, judging criteria, schedule): https://docs.google.com/presentation/d/1bn_W7NJ77So3cOsuSJhrhmcYjsaQ7JTN
 - PS02 brief: https://docs.google.com/document/d/1MONiQTYED3ZXcoKbR1rlYEvkulBOzVgb
 
-As of 8 Oct the repo has no code. **Hackathon rule: all build work happens during the 2 days, and pre-built solutions are disqualified.** Don't write solution code before Day 1 (9 Oct, 10:00 AM). Planning and design are fine.
+**Hackathon rule: all build work happens during the 2 days (9–10 Oct), and pre-built solutions are disqualified.** Code was started on Day 1 (9 Oct) in the `globalctx/` package; see README.md for commands and APPROACH.md for design decisions.
 
 ## What we must ship (submission window: 10 Oct, 2:00 PM to 11:59 PM; late entries are not evaluated)
 
@@ -179,7 +179,33 @@ This is a **dev-time tool, not part of the runtime.** It lets Claude Code config
 
 These organiser resources were still "to be shared" as of 8 Oct: the starter API list, sample GLIDs, sample voice and WhatsApp conversations, and the current bot prompt. Add their locations here once they arrive.
 
-## Planned architecture (proposed; update this section once the code exists)
+## Code (built 9 Oct)
+
+- Package `globalctx/` (not `gc`: that name clashes with Python's built-in garbage-collector module).
+- Commands:
+  - `python -m globalctx.ingest`
+  - `python -m globalctx.pick_demo`
+  - `python -m globalctx.build --demo`
+  - `uvicorn globalctx.app:app --port 8765` (port 8000 is taken on this machine)
+  - `python -m globalctx.voice.sdk_session`
+  - `python -m globalctx.voice.phone`
+  - `python -m globalctx.samples`
+  - `pytest tests`
+- Data, the SQLite DB and real profile files live in gitignored `data/`. Only redacted `samples/` are committed.
+- The hosted agent is `Conversatio-c49cd61c-ee22` in the **team workspace** (org `01a1109e-edab-…`, workspace `01a1109e-edb1-…`), configured through the project Sarvam MCP. `Conversatio-f58d078f-8b4b` in the personal workspace is an identically configured backup. Its prompt source is `globalctx/agent_prompt.md`.
+  - Input variables: context, role, glid, opening.
+  - Output variables: call_summary, requirement, quantity, callback_time, next_step, disposition.
+  - It is still uncommitted (draft v1). Commit only with the user's OK.
+- The SDK and analytics need `SARVAM_AGENTS_API_KEY` (a Voice Agents key from indus.sarvam.ai). This is separate from `SARVAM_API_KEY`, which is used for the LLM.
+- Role-play conversations are labelled synthetic (`GC_ROLEPLAY=1`, the default).
+- **Role is never hard-coded:** use `sessions.load(glid)` or `resolve.resolve(glid)` (only one / most recent / new cold start). Every file has an `## Identity` section with name and preferred language, and the opening uses both.
+- **Requests** go to `data/requests/{catalogue_updation_requests,requirements,enquiry}/<glid>.md`, with types restricted by role (`config.REQUEST_TYPES_BY_ROLE`).
+- **Phone test calls:** MCP `place_test_call` drops custom `app_variables`. To test a phone call with context, set the agent draft's *default* variables to the GLID's file, call, then reset the defaults to cold start.
+- **Sarvam caller ID** is `sha256("+91XXXXXXXXXX")`; `phonemap.lookup` matches it.
+- **Analytics API:** `/interactions` returns 500 when given `sort_by`, so we sort locally. `/transcripts/{id}` returns `messages[{role, content, language_name}]`.
+- **SDK voice:** an uncommitted agent needs `version=1`. The agent speaks only after the caller's audio starts. Use the audio chunk `status: completed` to detect the end of a turn, and merge streaming partial transcripts (`sessions.merge_partials`).
+
+## Architecture
 
 ```
 sources (starter APIs + labelled synthetic)  ──►  connectors/  (one per source; applies its lookback window)

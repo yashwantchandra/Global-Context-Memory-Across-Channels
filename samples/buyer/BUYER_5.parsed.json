@@ -1,0 +1,56 @@
+{
+  "meta": {
+    "glid": "BUYER_5",
+    "role": "buyer",
+    "generated_at": "2026-10-09T17:01:31.911",
+    "last_event_at": "2026-10-09T17:00:35.269",
+    "freshness_ms": "56642",
+    "data_quality": "ok",
+    "synthetic": "true",
+    "sources": "[buyer_activity, buyleads, profile, sellers, sessions, whatsapp]",
+    "lookback": "{buyer_activity: 30d, buyleads: 45d, sellers: 30d, sessions: 30d, whatsapp: 30d}",
+    "evicted": "{past_conversations: 7, open_threads: 1}"
+  },
+  "sections": {
+    "Identity": [
+      "Name: [Name 9] · Preferred language: Hinglish (last conversation)"
+    ],
+    "Snapshot": [
+      "Greater Noida, India · Free buyer",
+      "on IndiaMART 3 Y 4 M"
+    ],
+    "Enquiries & Status": [
+      "1 enquiries in last 30d",
+      "Latest enquiry 29 Sep: Servo Robot Arm",
+      "Buy requirement posted 01 Oct: ERP Software Development"
+    ],
+    "Categories Searched": [
+      "Paper Rewinding Machine (3) · Clutch Actuator (3) · Robotic Arm (2)"
+    ],
+    "Sellers Contacted": [
+      "0 sellers contacted (30d) · recent: [Name 3], [Name 7], Cad Mech Engineering Private Li…"
+    ],
+    "KYC": [
+      "Mobile Verified · email Verified · GST Verified"
+    ],
+    "Past Conversations": [
+      "09 Oct · Chat (our bot): User posted a buy requirement for 20 industrial safety helmets and requested an en… (synthetic)",
+      "01 Oct · WhatsApp: Need Rewinder Machine, 500 mm, 350 mpm in Greater Noida? Click YES to get best price!",
+      "30 Sep · WhatsApp: Hi! You just spoke with [Name 3] 📞 Was the call helpful?"
+    ],
+    "Open Threads": [
+      "Pending enquiry to send: servo robot arm · Send a quote enquiry to the servo robot arm seller. (raised 09 O… (synthetic)",
+      "Pending requirement to post: industrial safety helmets · Post a buy requirement for 20 industrial safety he… (synthetic)",
+      "Next step agreed: Forward the buy requirement and the quote enquiry to the respective teams. (chat, 09 Oct)"
+    ],
+    "Engagement Signals": [
+      "26 actions in 30d: Browse 15, Others 5, Search 5, BL 1"
+    ],
+    "Do-Not-Ask": [
+      "city: Greater Noida; requirement: ERP Software Development; interested in: Paper Rewinding Machine, Clutch Actuator, Robotic Arm; sellers already contacted; requirement: industrial safety helmets; quantity: 20 pieces @ Rs 400/piece; language: Hinglish; name;…"
+    ],
+    "Suggested Opening": [
+      "Namaste [Name 9] ji! Main IndiaMART se Vani bol rahi hoon. Aapki safety helmets aur servo robot arm ki enquiry par update dene ke liye call ki hai."
+    ]
+  }
+}
