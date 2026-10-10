@@ -179,7 +179,14 @@ This is a **dev-time tool, not part of the runtime.** It lets Claude Code config
 
 These organiser resources were still "to be shared" as of 8 Oct: the starter API list, sample GLIDs, sample voice and WhatsApp conversations, and the current bot prompt. Add their locations here once they arrive.
 
-## Architecture (decided 9 Oct): product name "Yaad"
+## v2 (10 Oct, branch `v2`): the current design
+- Two APIs: `POST /v1/event` and `GET /v1/context/{glid}?role=` (`yaad/api.py`). Tables: users, mcats, events, threads, freshness (`yaad/db.py`, `data/yaad_v2.db`).
+- Thread = user × mcat. `yaad/mapper.py` maps events (exact mcat → buyer-only sibling mcat → product text → counterparty+time → LLM pick among the user's threads). `yaad/updater.py` does the fast lane (stage/facts/sellers) and the slow lane (conversation → LLM summary, complaint → problem thread), and mirrors to the other side. `yaad/context.py` builds the md at query time (Snapshot · Open problems · Threads · Guardrails · Suggested opening), ranked problem > promise/callback > fresh > recent, firewall + ≤500 tokens.
+- Demo: `/demo` (`yaad/web/demo.html`), stories in `yaad/story/{amit,rakesh}.json`. Run `scripts/restart.sh`; tests `pytest tests/test_v2.py`.
+- v1 files (store, threads, render, pipeline, …) are no longer used and are pending deletion.
+- **Internet call (10 Oct):** the demo's call step uses Sarvam's **Web SDK** (`sarvam-conv-ai-sdk@0.0.42`, vendored in `yaad/web/vendor/`, served with extension/index redirects because its build uses extensionless imports). The browser mic (echo cancellation on) connects to Sarvam over a single-use signed WSS URL; `GET /v1/sarvam/orgs/…/url` is our proxy that adds the API key server-side (only our org/ws/app; anything else gets 403). `GET /v1/voice/session` supplies IDs, version 1 and the memory as `agent_variables` plus `initial_bot_message`. `POST /v1/voice/end` writes the browser transcript back instantly (channel "Web call"). The page requests the mic before opening the Sarvam session (if the permission is pending, the session sits in "connecting"). The phone UI is removed; `channels/phone.py` remains but is unused.
+
+## Architecture (decided 9 Oct): product name "Yaad" (v1, superseded)
 
 **Thesis:** memory that finishes the customer's unfinished work, in their language, with proof. The unit of memory is a **thread** (a buyer requirement, or a seller opportunity/blocker), not a summary of the person. Data backs it: 80% of enquiries have no seller reply in the thread, and 42% of VANI calls end "Not Interested".
 

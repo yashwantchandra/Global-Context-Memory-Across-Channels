@@ -45,6 +45,7 @@ class Memory:
     synthetic_sources: list = field(default_factory=list)
     forbidden: set = field(default_factory=set)  # strings that must never appear (firewall)
     cold: bool = False
+    snapshot: dict = field(default_factory=dict)  # structured "who" for the context API
 
 
 def _windowed(evs):
@@ -119,7 +120,7 @@ def line(e):
         return f"{d} · BuyLead · {p.get('product', '')[:40]}"
     if s == "call_extract":
         return f"{d} · Call notes · {p.get('intent', '')}: {p.get('products', '')[:50]}"
-    if s in ("yaad", "synthetic"):
+    if s in ("yaad", "synthetic", "search"):
         return f"{d} · {e['channel']} · {p.get('summary', '')[:90]}"
     return f"{d} · {e['channel']}"
 
@@ -330,7 +331,7 @@ def buyer_memory(glid):
 
     groups = defaultdict(list)
     for e in evs:
-        if e["source"] in ("enquiry", "pns", "bl", "call_extract", "synthetic") and e["thread_key"]:
+        if e["source"] in ("enquiry", "pns", "bl", "call_extract", "synthetic", "search") and e["thread_key"]:
             groups[e["thread_key"]].append(e)
     th = _promise_threads(evs)
     _promise_guard(m, th)
@@ -356,7 +357,7 @@ def buyer_memory(glid):
             bits.append(f"{len(bl)} seller(s) bought this lead")
         if notes and notes[-1]["payload"].get("prices"):
             bits.append("prices discussed: " + notes[-1]["payload"]["prices"][:50])
-        searches = [e for e in es if e["source"] == "synthetic"]
+        searches = [e for e in es if e["source"] in ("synthetic", "search")]
         if searches:
             sp = searches[-1]["payload"]
             bits.append(sp.get("summary", "searched")[:110])
@@ -369,7 +370,7 @@ def buyer_memory(glid):
         if x.get("spec"):
             bits.append("spec " + str(x["spec"])[:40])
         age = _age(last)
-        if any(_hours(e["dt"]) <= FRESH_HOURS for e in es if e["source"] in ("enquiry", "synthetic", "pns")):
+        if any(_hours(e["dt"]) <= FRESH_HOURS for e in es if e["source"] in ("enquiry", "synthetic", "search", "pns")):
             status, nxt, base = "ACTIVE_NOW", "they are looking for this right now: offer to connect sellers immediately", 215
         elif age > 30:
             status, nxt, base = "STALE", "ask if still needed", 20

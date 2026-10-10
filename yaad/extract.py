@@ -1,10 +1,10 @@
-"""LLM extraction (sarvam-105b): free text -> small fixed fields. Runs once per event and is cached.
+"""LLM extraction: a conversation transcript -> small fixed fields (the slow lane). Runs once per conversation.
 
 Rule for every prompt: only facts stated in the text; null when unknown. Never invent.
 """
 import re
 
-from . import config, llm, store
+from . import config, llm
 
 S = {"type": ["string", "null"]}
 
@@ -23,6 +23,8 @@ CONV_SCHEMA = {
         "language": {"type": "string", "enum": ["Hindi", "English", "Hinglish", "Gujarati", "Other"]},
         "sentiment": {"type": "string", "enum": ["positive", "neutral", "negative", "frustrated"]},
         "closed": {"type": "boolean", "description": "true if the customer's need was fully resolved"},
+        "complaint_issue": {**S, "description": "if the customer complained about a seller/order (fraud, non-delivery, quality), the issue in <=15 words; else null"},
+        "complaint_seller": {**S, "description": "the seller the complaint is about, exactly as named or confirmed in the conversation; else null"},
     },
     "required": ["one_line", "summary", "next_step", "next_step_hinglish", "language", "sentiment", "closed"],
 }
@@ -42,14 +44,18 @@ def conversation(turns, role, channel):
         except Exception:  # transient empty/invalid reply seen in testing: one retry
             out = llm.json_out(msgs, CONV_SCHEMA, max_tokens=1200, reasoning_effort="off", temperature=0.4)
         out["extracted_by"] = config.EXTRACT_MODEL
+        _clean(out)
         if not out.get("qty"):  # deterministic backstop: the model often drops quantities
             out["qty"] = _qty(" ".join(t for s, t in turns if s == "user"))
+        if not out.get("complaint_issue"):  # a complaint must never be lost to model randomness
+            out["complaint_issue"] = _complaint(turns)
         return out
     except Exception as e:  # LLM down must never break write-back
         last_user = next((t for s, t in reversed(turns) if s == "user"), "")
         return {"one_line": f"{channel} conversation ({len(turns)} turns)", "summary": last_user[:120],
                 "next_step": None, "language": "Hinglish", "sentiment": "neutral", "closed": False,
                 "qty": _qty(" ".join(t for s, t in turns if s == "user")),
+                "complaint_issue": _complaint(turns),
                 "extracted_by": f"fallback ({type(e).__name__})"}
 
 
@@ -80,53 +86,24 @@ def _qty(text):
     return None
 
 
-BOT_SCHEMA = {
-    "type": "object",
-    "properties": {"one_line": {"type": "string"}, "objection": S, "callback_date": S, "next_step": S},
-    "required": ["one_line"],
-}
-ENQ_SCHEMA = {
-    "type": "object",
-    "properties": {"one_line": {"type": "string"}, "qty": S, "spec": S},
-    "required": ["one_line"],
-}
+COMPLAINT = re.compile(r"(fraud|froud|dhokha|cheat|scam|advance le|paise le|paisa le|maal nahi|nahi bheja|nahi aaya|"
+                       r"refund|paisa wapas|paise wapas|complaint|shikayat|damaged|kharab maal|धोखा|फ्रॉड|माल नहीं)", re.I)
 
 
-def bot_call(e):
-    text = e["payload"].get("summary") or ""
-    if not text.strip():
-        return None
-    return llm.json_out([{"role": "system", "content": SYS},
-                         {"role": "user", "content": "Summarise this VANI sales-bot call with a seller. one_line <=15 words, "
-                                                     "objection = seller's main objection, callback_date = when they asked "
-                                                     "to be called back, next_step = pending action.\n\n" + text}],
-                        BOT_SCHEMA, max_tokens=500, reasoning_effort="off")
+def _complaint(turns):
+    """Rule backstop: the customer's own line that sounds like a complaint about a seller/order, else None."""
+    for s, t in turns:
+        if s == "user" and COMPLAINT.search(t or ""):
+            return t.strip()[:140]
+    return None
 
 
-def enquiry(e):
-    text = e["payload"].get("message") or ""
-    if len(text.strip()) < 15:
-        return None
-    return llm.json_out([{"role": "system", "content": SYS},
-                         {"role": "user", "content": "A buyer's enquiry. one_line <=12 words describing the requirement; "
-                                                     "qty and spec only if stated.\n\n" + text}],
-                        ENQ_SCHEMA, max_tokens=400, reasoning_effort="off")
-
-
-def backfill(glid, log=print):
-    """Extract the few free-text events that can reach a file: last 3 VANI calls, last 6 buyer enquiries."""
-    done = 0
-    for role, src, fn, k in (("seller", "bot_call", bot_call, 3), ("buyer", "enquiry", enquiry, 6)):
-        evs = [e for e in store.events(glid, role) if e["source"] == src][-k:]
-        for e in evs:
-            if e["extracted"]:
-                continue
-            try:
-                x = fn(e)
-            except Exception as ex:
-                log(f"  extract failed for event {e['id']}: {type(ex).__name__}")
-                continue
-            if x:
-                store.set_extracted(e["id"], x)
-                done += 1
-    return done
+def _clean(out):
+    """Drop junk the model sometimes returns (schema echoes, placeholders): facts must look like facts."""
+    for k in ("qty", "spec", "price", "product", "next_step", "complaint_seller"):
+        v = out.get(k)
+        if isinstance(v, str) and ("_or_" in v or "_" in v.strip() and " " not in v.strip() or len(v) > 120
+                                   or v.strip().lower() in ("null", "none", "n/a", "unknown", "")):
+            out[k] = None
+    if out.get("qty") and not re.search(r"\d", str(out["qty"])):
+        out["qty"] = None

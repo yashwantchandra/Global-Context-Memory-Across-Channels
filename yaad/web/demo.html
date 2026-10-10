@@ -1,0 +1,513 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yaad · memory across channels</title>
+<style>
+  :root{
+    --bg:#faf9f5; --card:#ffffff; --ink:#1f1e1d; --ink2:#55534e; --mute:#8d8a83; --line:#e8e6dc; --soft:#f3f1ea;
+    --acc:#c96442; --acc-soft:#f6e7df; --ok:#3f7d4e; --ok-soft:#e5f0e6; --bad:#b4442f; --bad-soft:#f8e3dd;
+    --blue:#3c6ea8; --blue-soft:#e4ecf6; --violet:#7a52a8; --violet-soft:#efe7f7; --hl:#fdf1c7;
+    --serif: "Tiempos Headline", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--ink);font:15px/1.55 var(--sans)}
+  button{font:inherit;cursor:pointer}
+  .hidden{display:none!important}
+  h1,h2,h3{font-family:var(--serif);font-weight:500;letter-spacing:-.01em;margin:0}
+  .mute{color:var(--mute)} .small{font-size:13px}
+
+  /* character */
+  .yaad{width:34px;height:34px;flex:none}
+  .yaad path{fill:none;stroke:var(--acc);stroke-width:3;stroke-linecap:round}
+  .yaad.big{width:84px;height:84px}
+  .yaad.pulse{animation:pulse 1.2s ease}
+  @keyframes pulse{0%{transform:scale(1)}30%{transform:scale(1.25) rotate(-8deg)}100%{transform:scale(1)}}
+
+  /* picker */
+  #picker{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 20px;gap:18px}
+  #picker h1{font-size:46px}
+  #picker .tag{font-size:19px;color:var(--ink2);max-width:640px;text-align:center}
+  .personas{display:flex;gap:22px;margin-top:22px;flex-wrap:wrap;justify-content:center}
+  .pcard{width:300px;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:26px;text-align:left;transition:transform .15s, box-shadow .15s}
+  .pcard:hover{transform:translateY(-3px);box-shadow:0 12px 30px rgba(60,40,20,.08)}
+  .av{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-size:22px}
+  .av.buyer{background:#e7efe3;color:#3f6b3a}.av.seller{background:#f1e6dc;color:#8a4b2a}
+  .pcard h2{font-size:24px;margin-top:14px}.pcard p{color:var(--ink2);margin:6px 0 18px}
+  .go{display:inline-flex;gap:8px;align-items:center;background:var(--ink);color:#fff;border:0;border-radius:999px;padding:10px 18px}
+  .go:hover{background:var(--acc)}
+
+  /* journey */
+  #journey{min-height:100vh;display:flex;flex-direction:column}
+  .top{display:flex;align-items:center;gap:14px;padding:14px 28px;border-bottom:1px solid var(--line);background:var(--bg);position:sticky;top:0;z-index:5}
+  .top .who{font-family:var(--serif);font-size:18px}
+  .dots{display:flex;gap:6px;margin-left:18px}
+  .dot{width:9px;height:9px;border-radius:50%;background:#dcd8cc;cursor:pointer}
+  .dot.done{background:var(--acc);opacity:.45}.dot.on{background:var(--acc);transform:scale(1.25)}
+  .tools{margin-left:auto;display:flex;gap:8px}
+  .tbtn{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:7px 13px;color:var(--ink2);font-size:13px}
+  .tbtn:hover{border-color:var(--acc);color:var(--acc)} .tbtn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .stage{flex:1;display:grid;grid-template-columns:minmax(320px,38%) 1fr;gap:28px;padding:28px;max-width:1500px;width:100%;margin:0 auto}
+  .story .n{font-size:13px;color:var(--mute);letter-spacing:.06em;text-transform:uppercase}
+  .story h2{font-size:34px;line-height:1.15;margin:8px 0 14px}
+  .story .narr{font-size:18px;color:var(--ink2);max-width:520px}
+  .nav{display:flex;gap:10px;margin-top:26px}
+  .next{background:var(--acc);color:#fff;border:0;border-radius:999px;padding:12px 22px;font-size:15px}
+  .next:hover{filter:brightness(1.06)} .back{background:none;border:1px solid var(--line);border-radius:999px;padding:12px 18px;color:var(--ink2)}
+  .evcard{margin-top:22px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;max-width:520px}
+  .evcard .h{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+  .chip{display:inline-block;font-size:12.5px;padding:3px 10px;border-radius:999px;background:var(--soft);color:var(--ink2);margin:2px 4px 2px 0}
+  .chip.acc{background:var(--acc-soft);color:var(--acc)}.chip.ok{background:var(--ok-soft);color:var(--ok)}
+  .chip.bad{background:var(--bad-soft);color:var(--bad)}.chip.blue{background:var(--blue-soft);color:var(--blue)}
+  .result{margin-top:10px;font-size:14px}
+  .result b{font-family:var(--serif);font-weight:500}
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+  .act{border:1px solid var(--line);background:var(--card);border-radius:14px;padding:12px 16px;font-size:15px}
+  .act:hover{border-color:var(--acc)} .act.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+  .suggest{margin-top:14px;font-size:13px;color:var(--mute)}
+  .suggest span{display:inline-block;background:var(--soft);border-radius:10px;padding:4px 10px;margin:4px 6px 0 0;color:var(--ink2)}
+
+  /* memory */
+  .mem{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:22px 24px;min-height:300px}
+  .memhead{display:flex;align-items:center;gap:12px}
+  .memhead h3{font-size:22px}
+  .memhead .meta{margin-left:auto;font-size:12.5px;color:var(--mute);text-align:right}
+  .toggle{display:inline-flex;background:var(--soft);border-radius:999px;padding:3px;margin-left:12px}
+  .toggle button{border:0;background:none;border-radius:999px;padding:4px 12px;font-size:12.5px;color:var(--ink2)}
+  .toggle button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+  .bubble{margin:18px 0 6px;background:var(--acc-soft);border-radius:18px 18px 18px 4px;padding:14px 18px;font-size:16.5px;color:#4a2a1c;position:relative}
+  .bubble .l{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--acc);margin-bottom:3px}
+  .thread{border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin-top:12px;transition:background 2s}
+  .thread.problem{border-color:#efc9bd;background:#fdf6f3}
+  .thread .top1{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .tid{font-family:var(--mono);font-size:12px;background:var(--soft);border-radius:6px;padding:2px 7px;color:var(--ink2)}
+  .ttitle{font-family:var(--serif);font-size:18px}
+  .badge{font-size:11px;font-weight:600;letter-spacing:.04em;padding:3px 9px;border-radius:999px;background:var(--soft);color:var(--ink2)}
+  .b-PROMISED{background:var(--violet-soft);color:var(--violet)}.b-OPEN{background:var(--bad-soft);color:var(--bad)}
+  .b-CALLBACK_DUE,.b-ENQUIRY_UNREAD,.b-CATALOG_ISSUE{background:#fbefd9;color:#9a6512}
+  .b-LEAD_BOUGHT,.b-SELLERS_CONNECTED,.b-IN_TALKS{background:var(--blue-soft);color:var(--blue)}
+  .b-SEARCHING,.b-BL_POSTED{background:var(--ok-soft);color:var(--ok)}
+  .tmeta{margin-left:auto;font-size:12px;color:var(--mute)}
+  .pipe{display:flex;gap:4px;margin:12px 0 8px}
+  .pipe div{flex:1;height:5px;border-radius:3px;background:#ebe8de}
+  .pipe div.on{background:var(--acc)}
+  .pipelab{display:flex;justify-content:space-between;font-size:10.5px;color:var(--mute);letter-spacing:.03em}
+  .row{font-size:14px;color:var(--ink2);margin-top:6px;overflow-wrap:anywhere}
+  .stage>*{min-width:0} .bubble,.next-step,.narr{overflow-wrap:anywhere}
+  .row b{color:var(--ink);font-weight:600}
+  .next-step{color:var(--acc);font-size:14px;margin-top:6px}
+  .flash{background:var(--hl)!important}
+  .guards{margin-top:16px;font-size:13px;color:var(--ink2)}
+  .guards div{padding:3px 0}
+  .guards div:before{content:"◆ ";color:var(--acc);font-size:10px}
+  pre.md{white-space:pre-wrap;font:12.5px/1.55 var(--mono);background:#1f1e1d;color:#efe9dc;border-radius:14px;padding:16px;margin:16px 0 0;max-height:62vh;overflow:auto}
+
+  /* split / firewall */
+  .stage.wide{grid-template-columns:290px 1fr}
+  .stage.wide .story h2{font-size:27px} .stage.wide .story .narr{font-size:16px}
+  .split{display:grid;grid-template-columns:1fr 128px 1fr;gap:12px;align-items:start}
+  .split .pipelab,.split .tmeta{display:none} .split .bubble{font-size:15px} .split .ttitle{font-size:16px}
+  .split .mem{padding:16px;min-height:0}
+  .split .memhead h3{font-size:17px}
+  .wall{background:var(--card);border:1px dashed #d9c3b6;border-radius:16px;padding:14px 10px;text-align:center;font-size:12.5px;position:sticky;top:90px}
+  .wall .ic{font-size:28px}
+  .wall .ok{color:var(--ok);margin-top:8px}.wall .no{color:var(--bad);margin-top:8px}
+  .wall .ok div:before{content:"✓ "}.wall .no div:before{content:"✕ "}
+
+  /* before/after, intro, reveal, card */
+  .ba{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:6px}
+  .ba .col{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px}
+  .ba .cold{background:#f1f0ec;border-radius:18px 18px 18px 4px;padding:14px 18px;font-size:17px;color:#55534e}
+  .big{font-family:var(--serif);font-size:70px;line-height:1;color:var(--acc)}
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:28px}
+  .code{font:12.5px/1.55 var(--mono);background:#1f1e1d;color:#efe9dc;border-radius:14px;padding:14px 16px;white-space:pre-wrap;margin:8px 0 16px;max-height:34vh;overflow:auto}
+  .code .k{color:#e9a27f}
+  table{border-collapse:collapse;width:100%;font-size:12.5px}
+  td,th{border-bottom:1px solid var(--line);padding:6px 6px;text-align:left;vertical-align:top}
+  th{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+  td.mono{font-family:var(--mono);font-size:12px}
+
+  /* drawer */
+  #drawer{position:fixed;left:0;right:0;bottom:0;height:40vh;background:#1f1e1d;color:#efe9dc;z-index:20;display:flex;flex-direction:column;box-shadow:0 -10px 30px rgba(0,0,0,.2)}
+  #drawer .dh{display:flex;align-items:center;gap:12px;padding:10px 20px;border-bottom:1px solid #3a3835;font-size:13px}
+  #drawer .dh b{font-family:var(--serif);font-size:16px;font-weight:500}
+  #calls{flex:1;overflow:auto;padding:10px 20px;font:12.5px/1.5 var(--mono)}
+  .call{border-bottom:1px solid #34322f;padding:8px 0}
+  .call .m{color:#e9a27f;font-weight:600}.call .t{color:#9b978e}
+  .call pre{margin:6px 0 0;white-space:pre-wrap;color:#d6d0c2;max-height:180px;overflow:auto}
+
+  /* side panels: chat + phone */
+  .panel{position:fixed;top:0;right:0;bottom:0;width:430px;max-width:100vw;background:var(--card);border-left:1px solid var(--line);z-index:15;display:flex;flex-direction:column;box-shadow:-12px 0 30px rgba(60,40,20,.08)}
+  .panel .ph{display:flex;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line)}
+  .panel .ph h3{font-size:19px}
+  .panel .close{margin-left:auto;border:0;background:none;font-size:20px;color:var(--mute)}
+  #msgs{flex:1;overflow:auto;padding:16px;background:#efeae2}
+  .msg{max-width:84%;padding:8px 12px;border-radius:12px;margin:6px 0;font-size:14.5px;background:#fff;box-shadow:0 1px 1px rgba(0,0,0,.05)}
+  .msg.user{margin-left:auto;background:#dcf8c6}
+  .msg .tm{font-size:10.5px;color:#8b9b8f;text-align:right}
+  .msg.sys{max-width:100%;text-align:center;background:#fff7d6;color:#6b5a00;font-size:12.5px;box-shadow:none}
+  .inp{display:flex;gap:8px;padding:10px;background:#f0f0f0}
+  .inp input{flex:1;border:0;border-radius:22px;padding:10px 15px;font:inherit;outline:none}
+  .inp button{border:0;border-radius:50%;width:42px;height:42px;background:#075e54;color:#fff}
+  .pbody{flex:1;overflow:auto;padding:18px}
+  .pbody select,.pbody input{width:100%;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:inherit;background:#fff}
+  .vtop{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+  .orb{width:64px;height:64px;border-radius:50%;background:var(--acc-soft);display:grid;place-items:center;font-size:26px;flex:none}
+  .orb.speaking{animation:breathe 1s ease-in-out infinite;background:#f3d4c4}
+  .orb.listening{box-shadow:0 0 0 6px rgba(63,125,78,.18);background:var(--ok-soft)}
+  @keyframes breathe{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+  .vstate{font-size:12px;font-weight:600;letter-spacing:.04em;padding:4px 10px;border-radius:999px;background:var(--soft);color:var(--ink2)}
+  .vstate.busy{background:var(--acc-soft);color:var(--acc)} .vstate.live{background:var(--ok-soft);color:var(--ok)}
+  .vstate.err{background:var(--bad-soft);color:var(--bad)}
+  #v-trans{margin-top:12px;max-height:44vh;overflow:auto;background:#f7f5ef;border-radius:14px;padding:10px}
+  #v-trans:empty{display:none}
+  .vbtns{display:flex;gap:8px;margin-top:12px}.vbtns .act{flex:1}
+  .note{margin-top:12px;padding:12px 14px;border-radius:14px;background:var(--soft);font-size:14px;color:var(--ink2)}
+  .note.ok{background:var(--ok-soft);color:#2d5a37}
+  @media (max-width:1000px){.stage{grid-template-columns:1fr}.split{grid-template-columns:1fr}.ba,.stats{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute"><defs>
+  <symbol id="knot" viewBox="0 0 64 64" fill="none" stroke="#c96442" stroke-width="3.2" stroke-linecap="round"><path d="M14 40c0-12 10-22 22-22 8 0 14 6 14 13s-6 13-14 13c-9 0-14-7-14-14"/><path d="M50 24c0 12-10 22-22 22-8 0-14-6-14-13s6-13 14-13c9 0 14 7 14 14"/></symbol>
+</defs></svg>
+
+<!-- ============ PICKER ============ -->
+<section id="picker">
+  <svg class="yaad big"><use href="#knot"/></svg>
+  <h1>Yaad</h1>
+  <div class="tag">Every IndiaMART conversation picks up where the last one stopped, on any channel, for buyers and sellers alike.</div>
+  <div class="personas">
+    <div class="pcard"><div class="av buyer">A</div><h2>Amit · Buyer</h2><p>Patil Constructions, Pune. Needs GI pipe for a site. His requirement keeps going unanswered.</p>
+      <button class="go" onclick="start('amit')">Follow Amit's journey →</button></div>
+    <div class="pcard"><div class="av seller">R</div><h2>Rakesh · Seller</h2><p>Shree Ganesh Steel Traders, Rajkot. Busy, asked for a callback, enquiries piling up.</p>
+      <button class="go" onclick="start('rakesh')">Follow Rakesh's journey →</button></div>
+  </div>
+  <div class="mute small" style="margin-top:14px">One deal, two memories. Labelled synthetic customers · Sarvam voice + chat · two APIs</div>
+</section>
+
+<!-- ============ JOURNEY ============ -->
+<section id="journey" class="hidden">
+  <div class="top">
+    <svg class="yaad" id="mark" onclick="home()" style="cursor:pointer"><use href="#knot"/></svg>
+    <span class="who" id="who"></span>
+    <div class="dots" id="dots"></div>
+    <div class="tools">
+      <button class="tbtn" id="btn-api" onclick="toggleDrawer()">{ } API calls</button>
+      <button class="tbtn" onclick="restart()">⟲ Reset</button>
+      <button class="tbtn" onclick="home()">Personas</button>
+    </div>
+  </div>
+  <div class="stage">
+    <div class="story" id="story"></div>
+    <div id="right"></div>
+  </div>
+</section>
+
+<!-- ============ API DRAWER ============ -->
+<div id="drawer" class="hidden">
+  <div class="dh"><b>API calls</b><span class="mute">every screen is a real call to the Yaad service</span>
+    <span style="margin-left:auto;cursor:pointer" onclick="toggleDrawer()">close ✕</span></div>
+  <div id="calls"></div>
+</div>
+
+<!-- ============ CHAT PANEL ============ -->
+<div class="panel hidden" id="chatp">
+  <div class="ph"><div class="av buyer" id="chat-av" style="width:36px;height:36px;font-size:15px">A</div>
+    <div><h3 id="chat-title">WhatsApp</h3><div class="small mute">IndiaMART · Yaad · reads the same memory</div></div>
+    <button class="close" onclick="closeChat()">✕</button></div>
+  <div id="msgs"></div>
+  <div class="inp"><input id="inp" placeholder="Type as the customer…"><button onclick="send()">➤</button></div>
+  <div style="padding:10px;border-top:1px solid var(--line)"><button class="act primary" style="width:100%" onclick="endChat()">End chat → save to memory</button></div>
+</div>
+
+<!-- ============ PHONE PANEL ============ -->
+<div class="panel hidden" id="voicep">
+  <div class="ph"><div class="av" id="v-av" style="width:36px;height:36px;font-size:15px">A</div>
+    <div><h3>Internet call</h3><div class="small mute">This laptop's mic ⇄ Sarvam voice agent over a secure WebSocket</div></div>
+    <button class="close" onclick="closeVoice()">✕</button></div>
+  <div class="pbody">
+    <div class="vtop"><div class="orb" id="v-orb">🎙</div>
+      <div><div class="ttitle" id="v-who" style="font-size:18px"></div><span class="vstate" id="v-state">Ready</span></div></div>
+    <div class="vbtns">
+      <button class="act primary" id="v-start" onclick="startVoice()">🎙 Start call</button>
+      <button class="act" id="v-mute" onclick="toggleMute()" disabled>Mute</button>
+      <button class="act" id="v-end" onclick="finishVoice('user')" disabled>End call</button>
+    </div>
+    <div id="v-note"><div class="note">The agent reads this customer's memory before it speaks. Use earphones for the cleanest audio. When the call ends, it is saved to memory instantly.</div></div>
+    <div id="v-trans"></div>
+    <button class="act" style="width:100%;margin-top:14px" onclick="replay()">⏵ Replay the recorded call instead</button>
+  </div>
+</div>
+
+<script type="module">
+  // Sarvam Web SDK, vendored (yaad/web/vendor). The API key stays on our server: the SDK asks /v1/sarvam/ for a
+  // single-use signed WSS URL, then talks to Sarvam directly.
+  import { ConversationAgent, BrowserAudioInterface, InteractionType } from "/vendor/sarvam-conv-ai-sdk/browser.js";
+  window.YaadVoice = { ConversationAgent, BrowserAudioInterface, InteractionType };
+</script>
+
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let S=null, persona=null, step=0, played=new Set(), last={}, prevThreads={}, view='card', chatId=null, lastEvent=null;
+const PIPE=['SEARCHING','BL_POSTED','SELLERS_CONNECTED','IN_TALKS','PROMISED'];
+const PIPE_LAB=['Searching','Posted','Connected','In talks','Promised'];
+const nice=s=>String(s||'').replace(/_/g,' ').toLowerCase();
+
+/* ---------- every API call goes through here, so the drawer can show it ---------- */
+async function api(method, url, body){
+  const t0=performance.now();
+  const r=await fetch(url,{method,headers:{'content-type':'application/json'},body:body?JSON.stringify(body):undefined});
+  const data=await r.json().catch(()=>({}));
+  logCall(method,url,body,data,Math.round(performance.now()-t0),r.status);
+  if(!r.ok) throw new Error(data.detail||r.status);
+  return data;
+}
+function logCall(method,url,body,data,ms,status){
+  if(!url.startsWith('/v1/')&&method!=='WSS') return;
+  const short=JSON.stringify(data,(k,v)=>k==='md'&&typeof v==='string'?v.slice(0,600)+(v.length>600?' …':''):v,2);
+  $('calls').insertAdjacentHTML('afterbegin',`<div class="call"><span class="m">${method}</span> ${esc(url)} <span class="t">· ${status} · ${ms} ms</span>
+    ${body?`<pre>${esc(JSON.stringify(body,null,2))}</pre>`:''}<pre>→ ${esc(short.slice(0,2500))}</pre></div>`);
+}
+function toggleDrawer(){ $('drawer').classList.toggle('hidden'); $('btn-api').classList.toggle('on'); }
+
+/* ---------- picker / journey ---------- */
+async function start(p){
+  persona=p; step=0; played=new Set(); prevThreads={};
+  await api('POST',`/demo/reset/${p}`);
+  S=await api('GET',`/demo/story/${p}`);
+  $('picker').classList.add('hidden'); $('journey').classList.remove('hidden');
+  $('who').textContent=S.title;
+  render();
+}
+function home(){ closeChat(); closeVoice(); $('journey').classList.add('hidden'); $('picker').classList.remove('hidden'); }
+async function restart(){ await start(persona); }
+function dots(){ $('dots').innerHTML=S.steps.map((s,i)=>`<div class="dot ${i<step?'done':''} ${i===step?'on':''}" title="${esc(s.title)}" onclick="go(${i})"></div>`).join(''); }
+let busy=false;
+async function go(i){
+  if(busy||i<0||i>=S.steps.length) return;
+  busy=true;
+  try{
+    // every earlier event is played in order, even if the presenter skips ahead quickly
+    for(let j=0;j<i;j++){ const st=S.steps[j]; if(st.kind==='event'&&!played.has(j)){ played.add(j); last[j]=lastEvent=await api('POST','/v1/event',st.body); } }
+    step=i; await render();
+  } finally { busy=false; }
+}
+document.addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT') return;
+  if(e.key==='ArrowRight') go(step+1); if(e.key==='ArrowLeft') go(step-1);
+  if(e.key==='Escape'){ closeChat(); closeVoice(); }
+});
+
+async function render(){
+  dots();
+  const st=S.steps[step];
+  let html=`<div class="n">Step ${step+1} of ${S.steps.length}</div><h2>${esc(st.title)}</h2><div class="narr">${esc(st.narration)}</div>`;
+  if(st.kind==='event'){
+    if(!played.has(step)){ played.add(step); lastEvent=await api('POST','/v1/event',st.body); last[step]=lastEvent; }
+    const r=last[step]||{}; const b=st.body;
+    html+=`<div class="evcard"><div class="h">POST /v1/event</div>
+      <span class="chip acc">${esc(b.type)}</span>${b.mcat_id?`<span class="chip">mcat ${esc(b.mcat_id)}</span>`:'<span class="chip">no mcat</span>'}
+      ${b.counterparty?`<span class="chip">counterparty ${esc(b.counterparty)}</span>`:''}
+      <div class="result">→ <b>${esc((r.thread_id||'').split('-')[0])} · ${esc(r.thread)}</b> &nbsp;<span class="chip ${r.new_thread?'ok':'blue'}">${r.new_thread?'new thread':'same thread'}</span>
+      <span class="chip">via ${esc(nice(r.map_method))}</span><span class="chip">${esc(r.confidence)} confidence</span><span class="chip ok">${esc(r.ms)} ms</span>
+      ${(r.mirrored||[]).length?`<div class="small mute" style="margin-top:6px">also written to: ${r.mirrored.map(m=>esc(m.glid)+' · '+esc(m.thread)+' ['+nice(m.stage)+']').join(', ')}</div>`:''}</div></div>`;
+  }
+  if(st.kind==='call'||st.kind==='chat'){
+    html+=`<div class="actions">${st.kind==='call'?'<button class="act primary" onclick="openVoice()">🎙 Talk from this laptop</button>':'<button class="act primary" onclick="openChat()">💬 Open WhatsApp chat</button>'}
+      <button class="act" onclick="replay()">⏵ Replay recorded</button></div>
+      <div class="suggest">Try saying: ${st.suggest.map(x=>`<span>${esc(x)}</span>`).join('')}</div>`;
+  }
+  html+=`<div class="nav">${step>0?'<button class="back" onclick="go(step-1)">←</button>':''}${step<S.steps.length-1?'<button class="next" onclick="go(step+1)">Next →</button>':'<button class="next" onclick="home()">Back to personas</button>'}</div>`;
+  $('story').innerHTML=html;
+  await renderRight(st);
+}
+
+/* ---------- right side ---------- */
+let hadPrev=false;
+async function renderRight(st){
+  hadPrev=Object.keys(prevThreads).length>0;
+  document.querySelector('.stage').classList.toggle('wide', !!st.split);
+  if(st.kind==='intro'){
+    $('right').innerHTML=`<div class="stats"><div class="stat"><div class="big">80%</div><div style="margin-top:10px;font-size:17px">of buyer enquiries never get a seller reply</div></div>
+      <div class="stat"><div class="big">42%</div><div style="margin-top:10px;font-size:17px">of VANI calls end "Not Interested"</div></div></div>
+      <div class="note" style="margin-top:18px">From IndiaMART's own data (5,000 sellers, Apr to Oct 2026). Every bot starts each conversation blank.</div>`; return;
+  }
+  if(st.kind==='before_after'){
+    const c=await api('GET',`/v1/context/${S.glid}?role=${S.role}`);
+    $('right').innerHTML=`<div class="ba"><div class="col"><div class="small mute" style="margin-bottom:8px">TODAY'S VANI</div><div class="cold">${esc(st.cold)}</div>
+      <div class="small mute" style="margin-top:10px">Starts blank. Pitches. 42% end Not Interested.</div></div>
+      <div class="col"><div class="small" style="color:var(--acc);margin-bottom:8px">YAAD</div><div class="bubble" style="margin:0">${esc(c.opening)}</div>
+      <div class="small mute" style="margin-top:10px">Built from ${c.threads.length} open threads in his memory, ${c.tokens} tokens.</div></div></div>`; return;
+  }
+  if(st.kind==='card'){ const c=await api('GET',`/v1/context/${S.glid}?role=${S.role}`); $('right').innerHTML=execCard(c); return; }
+  if(st.kind==='reveal'){ await reveal(); return; }
+  if(st.split){ await renderSplit(); return; }
+  const c=await api('GET',`/v1/context/${S.glid}?role=${S.role}`);
+  $('right').innerHTML=memoryHTML(c, S.title.split(' ·')[0]+"'s memory", S.role);
+  pulse();
+}
+function pipeline(t){
+  if(t.kind!=='requirement') return '';
+  const k=PIPE.indexOf(t.stage===('CLOSED')?'PROMISED':t.stage);
+  return `<div class="pipe">${PIPE.map((p,i)=>`<div class="${i<=k?'on':''}"></div>`).join('')}</div><div class="pipelab">${PIPE_LAB.map(l=>`<span>${l}</span>`).join('')}</div>`;
+}
+function threadHTML(t){
+  const key=t.thread_id, sig=JSON.stringify([t.stage,t.known,t.status,t.next_step]);
+  const changed=hadPrev && prevThreads[key]!==sig;  // highlight only real changes since the last screen
+  prevThreads[key]=sig;
+  return `<div class="thread ${t.kind==='problem'?'problem':''} ${changed?'flash':''}">
+    <div class="top1"><span class="tid">${esc(t.id)}</span><span class="ttitle">${esc(t.title)}</span><span class="badge b-${t.stage}">${esc(nice(t.stage))}</span>
+    <span class="tmeta">${esc((t.last_activity||'').slice(5,16))} · ${esc(t.last_channel)}</span></div>
+    ${pipeline(t)}
+    ${t.known.length?`<div class="row"><b>Known</b> · ${t.known.map(esc).join(' · ')}</div>`:''}
+    <div class="row"><b>Status</b> · ${esc(t.status)}</div>
+    ${t.summary&&t.kind!=='opportunity'?`<div class="row"><b>Summary</b> · ${esc(t.summary)}</div>`:''}
+    ${t.next_step?`<div class="next-step">→ ${esc(t.next_step)}</div>`:''}</div>`;
+}
+function memoryHTML(c,title,role,compact=false){
+  const head=`<div class="memhead"><div class="av ${role}" style="width:34px;height:34px;font-size:15px">${esc((c.snapshot.name||'?')[0])}</div>
+    <h3>${esc(title)}</h3>${compact?'':`<div class="toggle"><button class="${view==='card'?'on':''}" onclick="setView('card')">Card</button><button class="${view==='md'?'on':''}" onclick="setView('md')">.md</button></div>`}
+    <div class="meta">${c.tokens} tokens · ${c.build_ms} ms${compact?'':'<br>'+esc([c.snapshot.city,c.snapshot.language].filter(Boolean).join(' · '))}</div></div>`;
+  if(view==='md'&&!compact) return `<div class="mem">${head}<pre class="md">${esc(c.md)}</pre></div>`;
+  if(!c._marked){ c._marked=true; }
+  const ths=c.threads.slice(0,compact?3:4).map(threadHTML).join('')||'<div class="note">No open threads. A clean, generic welcome.</div>';
+  return `<div class="mem">${head}<div class="bubble"><div class="l">Bot opens with</div>${esc(c.opening)}</div>${ths}
+    ${compact?'':`<div class="guards">${c.guardrails.map(g=>`<div>${esc(g)}</div>`).join('')}</div>`}</div>`;
+}
+function setView(v){ view=v; renderRight(S.steps[step]); }
+async function renderSplit(){
+  const [b,s]=await Promise.all([api('GET','/v1/context/SYN-B-2001?role=buyer'),api('GET','/v1/context/SYN-S-1001?role=seller')]);
+  $('right').innerHTML=`<div class="split">${memoryHTML(b,"Amit's memory (buyer)",'buyer',true)}
+    <div class="wall"><div class="ic">🛡</div><b>Firewall</b><div class="ok"><div>city</div><div>product</div><div>quantity</div><div>spec</div></div>
+    <div class="no"><div>name</div><div>company</div><div>phone</div><div>complaints</div></div></div>
+    ${memoryHTML(s,"Rakesh's memory (seller)",'seller',true)}</div>`;
+  pulse();
+}
+function execCard(c){
+  return `<div class="mem"><div class="memhead"><h3>Executive call-prep card</h3><div class="meta">same /v1/context JSON · no LLM</div></div>
+    <div class="row" style="margin-top:12px"><b>${esc(c.snapshot.company||'')}</b> · ${esc(c.snapshot.name||'')} · ${esc(c.snapshot.city||'')} · ${esc(c.snapshot.plan||'')}</div>
+    <h3 style="font-size:17px;margin-top:18px">Talk about</h3>${c.threads.slice(0,3).map(t=>`<div class="row">• <b>${esc(t.title)}</b> (${esc(nice(t.stage))}): ${esc(t.next_step||t.where_we_are)}</div>`).join('')}
+    <h3 style="font-size:17px;margin-top:18px">Watch out</h3>${c.guardrails.map(g=>`<div class="row">◆ ${esc(g)}</div>`).join('')}
+    <div class="bubble"><div class="l">Say first</div>${esc(c.opening)}</div></div>`;
+}
+async function reveal(){
+  const [c,t,st]=await Promise.all([api('GET',`/v1/context/${S.glid}?role=${S.role}`),api('GET',`/v1/tables/${S.glid}?role=${S.role}`),api('GET','/v1/stats')]);
+  const body=lastEvent?S.steps.find(s=>s.body&&s.body.type===lastEvent.type)?.body:null;
+  $('right').innerHTML=`<div class="mem"><h3 style="font-size:20px">1 · Any source reports activity</h3>
+    <div class="code"><span class="k">POST</span> /v1/event\n${esc(JSON.stringify(body||S.steps.find(s=>s.body)?.body,null,2))}</div>
+    <h3 style="font-size:20px">2 · Any bot reads memory before it speaks</h3>
+    <div class="code"><span class="k">GET</span> /v1/context/${esc(S.glid)}?role=${esc(S.role)}   → ${c.tokens} tokens, built in ${c.build_ms} ms\n\n${esc(c.md)}</div>
+    <h3 style="font-size:20px">The tables behind it</h3>
+    <table><tr><th>thread</th><th>mcat</th><th>kind</th><th>stage</th><th>parent</th><th>events</th></tr>${t.threads.map(r=>`<tr><td class="mono">${esc(r.thread_id.split('-')[0])}</td><td>${esc(r.title)}</td><td>${esc(r.kind)}</td><td>${esc(r.stage)}</td><td class="mono">${esc((r.parent_thread_id||'').split('-')[0])}</td><td>${r.n_events}</td></tr>`).join('')}</table>
+    <table style="margin-top:12px"><tr><th>event</th><th>type</th><th>→ thread</th><th>mapped via</th><th>confidence</th></tr>${t.events.slice(-8).reverse().map(e=>`<tr><td class="mono">#${e.event_id}</td><td>${esc(e.type)}</td><td class="mono">${esc((e.thread_id||'').split('-')[0])}</td><td>${esc(e.map_method)}</td><td>${esc(e.map_confidence)}</td></tr>`).join('')}</table>
+    <div class="note" style="margin-top:14px">Freshness: event → memory p50 <b>${st.freshness.p50_ms} ms</b>, p95 ${st.freshness.p95_ms} ms (n=${st.freshness.n}). A conversation reaches memory in ~1 s (one LLM summary).</div></div>`;
+}
+function pulse(){ const m=$('mark'); m.classList.remove('pulse'); void m.offsetWidth; m.classList.add('pulse'); }
+
+/* ---------- chat ---------- */
+function addMsg(who,text,meta=''){ $('msgs').insertAdjacentHTML('beforeend',`<div class="msg ${who}">${esc(text)}<div class="tm">${esc(meta)}</div></div>`); $('msgs').scrollTop=1e9; }
+async function openChat(){
+  closeVoice(); $('chatp').classList.remove('hidden'); $('msgs').innerHTML='';
+  $('chat-av').textContent=S.role==='buyer'?'A':'R'; $('chat-title').textContent=S.title.split(' ·')[0]+' · WhatsApp';
+  const d=await api('POST','/v1/chat/start',{glid:S.glid,role:S.role}); chatId=d.chat_id;
+  addMsg('sys',`The bot read ${S.role}.md (${d.context_tokens} tokens) before the first message`); addMsg('bot',d.opening,'from memory · no wait');
+  $('inp').focus();
+}
+async function send(){
+  const t=$('inp').value.trim(); if(!t||!chatId) return; $('inp').value=''; addMsg('user',t);
+  addMsg('bot','typing…'); const typing=$('msgs').lastElementChild;
+  const d=await api('POST',`/v1/chat/${chatId}/say`,{text:t}); typing.remove(); addMsg('bot',d.reply,`${d.ms} ms`);
+}
+$('inp').addEventListener('keydown',e=>{ if(e.key==='Enter') send(); });
+async function endChat(){
+  if(!chatId) return; addMsg('sys','Saving the conversation to memory…');
+  const r=await api('POST',`/v1/chat/${chatId}/end`); chatId=null;
+  addMsg('sys',`Saved → ${(r.thread_id||'').split('-')[0]} ${r.thread||''} [${nice(r.stage)}] in ${r.ms} ms`+((r.mirrored||[]).length?` · also updated: ${r.mirrored.map(m=>m.thread+' ['+nice(m.stage)+']').join(', ')}`:''));
+  setTimeout(()=>{ closeChat(); renderRight(S.steps[step]); },1400);
+}
+function closeChat(){ $('chatp').classList.add('hidden'); }
+
+/* ---------- internet call (Sarvam Web SDK) ---------- */
+let vAgent=null, vTurns=[], vEnded=true, vMuted=false;
+const STATE_LABEL={connecting:['Connecting…','busy'],connected:['Connected','live'],listening:['Listening','live'],speaking:['Agent speaking','busy'],idle:['Ended',''],error:['Error','err']};
+function vState(label,cls=''){ $('v-state').textContent=label; $('v-state').className='vstate '+cls; }
+function vButtons(live){ $('v-start').disabled=live; $('v-mute').disabled=!live; $('v-end').disabled=!live; }
+function vMsg(who,text){ $('v-trans').insertAdjacentHTML('beforeend',`<div class="msg ${who==='user'?'user':''}" style="max-width:92%">${esc(text)}</div>`); $('v-trans').scrollTop=1e9; }
+function openVoice(){
+  closeChat(); $('voicep').classList.remove('hidden');
+  $('v-av').textContent=S.role==='buyer'?'A':'R'; $('v-av').className='av '+S.role; $('v-who').textContent=S.title.split(' ·')[0];
+  if(!vAgent){ vState('Ready'); vButtons(false); $('v-trans').innerHTML=''; $('v-orb').className='orb'; }
+}
+async function startVoice(){
+  if(vAgent) return;
+  if(!window.YaadVoice){ $('v-note').innerHTML='<div class="note">The voice SDK did not load. Use Replay below.</div>'; return; }
+  vTurns=[]; vEnded=false; vMuted=false; $('v-trans').innerHTML=''; vButtons(true);
+  const {ConversationAgent,BrowserAudioInterface,InteractionType}=window.YaadVoice;
+  try{
+    // get the microphone first, so a Sarvam session is never opened while Chrome's permission prompt is pending
+    vState('Waiting for microphone…','busy');
+    $('v-note').innerHTML='<div class="note">Allow the microphone in Chrome\'s prompt (top-left of the window).</div>';
+    const probe=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
+    probe.getTracks().forEach(t=>t.stop());
+    vState('Connecting…','busy');
+    const s=await api('GET',`/v1/voice/session?glid=${encodeURIComponent(S.glid)}&role=${S.role}`);
+    logCall('GET',`/v1/sarvam/orgs/…/apps/${s.app_id}/url (signed WSS URL, key added server-side)`,null,{note:'requested by the Sarvam SDK through our proxy'},0,200);
+    vAgent=new ConversationAgent({
+      apiKey:'', baseUrl:'/v1/sarvam/',
+      config:{org_id:s.org_id, workspace_id:s.workspace_id, app_id:s.app_id, version:s.version,
+              user_identifier:s.user_identifier, user_identifier_type:'custom', interaction_type:InteractionType.CALL,
+              input_sample_rate:16000, output_sample_rate:16000,
+              agent_variables:s.agent_variables, initial_bot_message:s.opening},
+      audioInterface:new BrowserAudioInterface(),
+      transcriptCallback:async m=>{ const who=String(m.role).toLowerCase()==='user'?'user':'bot'; vTurns.push([who,m.content]); vMsg(who,m.content); },
+      stateCallback:async st=>{ const [l,c]=STATE_LABEL[st]||[st,'']; if(!vEnded){ vState(l,c); $('v-orb').className='orb '+(st==='speaking'?'speaking':st==='listening'?'listening':''); } },
+      endCallback:async()=>{ finishVoice('agent'); },
+    });
+    await vAgent.start();
+    if(!(await vAgent.waitForConnect(10))) throw new Error('Could not connect to Sarvam in 10 s');
+    let iid=null; try{ iid=vAgent.getInteractionId(); }catch(e){}
+    logCall('WSS','/v1/… → wss://apps.sarvam.ai (signed, single-use)',null,{connected:true,interaction_id:iid},0,101);
+    $('v-note').innerHTML='<div class="note ok">Live. Speak as the customer; the transcript appears below.</div>';
+  }catch(err){
+    const name=err&&err.name;
+    const msg=name==='NotAllowedError'?'Microphone permission was denied. Allow the mic for this page and try again.'
+      :name==='NotFoundError'?'No microphone found.':name==='NotReadableError'?'The microphone is in use by another app.'
+      :`Could not start the call: ${err&&err.message||err}`;
+    $('v-note').innerHTML=`<div class="note">${esc(msg)} You can use Replay below.</div>`;
+    vState('Error','err'); try{ await vAgent?.stop(); }catch(e){} vAgent=null; vEnded=true; vButtons(false);
+  }
+}
+function toggleMute(){ if(!vAgent) return; vMuted=!vMuted; try{ vMuted?vAgent.mute():vAgent.unmute(); }catch(e){} $('v-mute').textContent=vMuted?'Unmute':'Mute'; }
+async function finishVoice(by='user'){
+  if(vEnded) return; vEnded=true;
+  const a=vAgent; vAgent=null; let iid=null;
+  try{ iid=a?.getInteractionId(); }catch(e){} try{ await a?.stop(); }catch(e){}
+  vButtons(false); $('v-orb').className='orb'; vState(by==='agent'?'Agent ended the call · saving…':'Saving to memory…','busy');
+  const r=await api('POST','/v1/voice/end',{glid:S.glid,role:S.role,turns:vTurns,interaction_id:iid});
+  if(r.skipped){ vState('Ended'); $('v-note').innerHTML=`<div class="note">Nothing saved: ${esc(r.skipped)}.</div>`; return; }
+  vState('Saved','live'); showSaved(r);
+  setTimeout(()=>{ closeVoice(true); renderRight(S.steps[step]); },1800);
+}
+function closeVoice(force=false){ if(vAgent&&!force) finishVoice('user'); $('voicep').classList.add('hidden'); }
+async function replay(){
+  const st=S.steps[step]; const fb=st.fallback; if(!fb) return;
+  if(!$('voicep').classList.contains('hidden')){ $('v-trans').innerHTML=''; fb.turns.forEach(([w,t])=>vMsg(w,t)); vState('Replaying recorded call…','busy'); }
+  const r=await api('POST','/demo/replay',{glid:S.glid,role:S.role,channel:fb.channel,turns:fb.turns,platform_vars:fb.platform_vars||{}});
+  showSaved(r); setTimeout(()=>{ closeVoice(true); closeChat(); renderRight(st); },1600);
+}
+function showSaved(r){
+  const extra=(r.mirrored||[]).map(m=>`${esc(m.thread)} [${nice(m.stage)}]`).join(', ');
+  const html=`<div class="note ok">✓ Saved to memory: <b>${esc((r.thread_id||'').split('-')[0])} ${esc(r.thread)}</b> → ${esc(nice(r.stage))} in ${r.ms} ms${extra?`<br>Also updated: ${extra}`:''}</div>`;
+  if(!$('voicep').classList.contains('hidden')) $('v-note').innerHTML=html; else if(!$('chatp').classList.contains('hidden')) addMsg('sys',html.replace(/<[^>]+>/g,''));
+}
+</script>
+</body>
+</html>

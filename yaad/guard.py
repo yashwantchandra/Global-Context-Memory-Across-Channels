@@ -3,7 +3,7 @@ import re
 
 PHONE = re.compile(r"(?<!\d)(?:\+?91[\s-]?)?[6-9]\d{9}(?!\d)")
 EMAIL = re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+")
-REQUIRED = ["## Who", "## Known – don't ask", "## Open threads", "## Recent timeline", "## Guardrails", "## Suggested opening"]
+REQUIRED = ["## Snapshot", "## Open problems", "## Threads", "## Guardrails", "## Suggested opening"]
 
 
 def tokens(text: str) -> int:

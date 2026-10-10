@@ -59,6 +59,23 @@ A running log of what we did, which tools we used and what we learned. Newest at
     Running it 3 times exposed flaky cases (a lost quantity on the fallback path, an over-broad "done" detector) that
     a single run hid. Now 59/59, stable across 4 runs.
 
+## Day 2 · 10 Oct: v2, a simpler and more convincing design
+
+14. **The team pushed back: v1 worked but read like a workbench.** We redesigned from the team's whiteboard:
+    *a thread = one user's activity on one mcat* (IndiaMART's own key), a threads table, and the md **built at query
+    time**. Two APIs only: `POST /v1/event` and `GET /v1/context/{glid}`.
+15. **Mapping events to threads:** rules first (exact mcat, then a sibling mcat on the buyer side, product text, then
+    counterparty + time), and the LLM only *chooses* among the user's own threads. Complaints become **problem threads**
+    linked to the requirement (fraud by seller X never lands in seller X's file). Sibling merging on the seller side
+    was wrong (SS pipe ≠ GI pipe), so it is buyer-only.
+16. **Two-sided memory:** one buy-lead match writes to the buyer and to each seller (aggregates only). A seller's
+    promise on a call ("quote by 11 AM") appears in the buyer's thread; the buyer's qty change reaches connected sellers.
+17. **LLM hardening found by clicking through the demo:** the model echoed schema text as a quantity, marked a
+    complaint conversation as "closed", and sometimes missed complaints. Fixes: fact validation, "a complaint never
+    closes a requirement", and a rule-based complaint backstop.
+18. **Demo = product:** one page, persona picker, each step fires a real `POST /v1/event`, the API drawer shows every
+    request/response, live chat and phone (with a "replay recorded" safety net), split view across the firewall.
+
 ## Learnings
 - Writing the rules down first (thread statuses, lookbacks, budget) made the code small and the demo explainable.
 - Claude must not read raw customer text (it counts as a third party), so we developed on labelled synthetic
