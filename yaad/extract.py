@@ -8,6 +8,14 @@ from . import config, llm
 
 S = {"type": ["string", "null"]}
 
+REQUEST_TYPES = {  # a request is work for the IndiaMART team, written to the requests table
+    "post_requirement": "buyer asks us to post/forward a requirement to sellers",
+    "send_enquiry": "buyer asks us to contact a specific seller",
+    "catalogue_update": "seller asks to add/change a product or photo in the catalogue",
+    "price_update": "seller asks to change a listed price",
+    "callback": "customer asks for a human/executive call back",
+}
+
 CONV_SCHEMA = {
     "type": "object",
     "properties": {
@@ -26,6 +34,13 @@ CONV_SCHEMA = {
         "closed": {"type": "boolean", "description": "true if the customer's need was fully resolved"},
         "complaint_issue": {**S, "description": "if the customer complained about a seller/order (fraud, non-delivery, quality), the issue in <=15 words; else null"},
         "complaint_seller": {**S, "description": "the seller the complaint is about, exactly as named or confirmed in the conversation; else null"},
+        "requests": {"type": "array", "description": "things the CUSTOMER explicitly asked IndiaMART to do in this "
+                     "conversation (not things the bot offered and the customer only accepted with 'ok'); [] if none",
+                     "items": {"type": "object", "properties": {
+                         "type": {"type": "string", "enum": list(REQUEST_TYPES)},
+                         "product": S, "qty": S, "price": S, "location": S,
+                         "note": {**S, "description": "<=15 words, English: what exactly to do"}},
+                         "required": ["type"]}},
     },
     "required": ["one_line", "summary", "next_step", "next_step_hinglish", "language", "sentiment", "closed"],
 }
@@ -40,23 +55,34 @@ def conversation(turns, role, channel):
     try:
         msgs = [{"role": "system", "content": SYS},
                 {"role": "user", "content": f"Channel: {channel}. The customer is a {role} on IndiaMART.\n\n{convo}"}]
-        try:
-            out = llm.json_out(msgs, CONV_SCHEMA, max_tokens=900, reasoning_effort="off")
-        except Exception:  # transient empty/invalid reply seen in testing: one retry
-            out = llm.json_out(msgs, CONV_SCHEMA, max_tokens=1200, reasoning_effort="off", temperature=0.4)
-        out["extracted_by"] = config.EXTRACT_MODEL
+        # the model often returns no JSON (seen 10 Oct: 2-4 of 6 calls failed): three tries, the last on the other model
+        out, used = None, None
+        for model, tokens, temp in ((config.EXTRACT_MODEL, 900, 0.2), (config.EXTRACT_MODEL, 1200, 0.4),
+                                    ("sarvam-105b", 1200, 0.3)):
+            try:
+                out = llm.json_out(msgs, CONV_SCHEMA, model=model, max_tokens=tokens, reasoning_effort="off",
+                                   temperature=temp, retries=1)
+                used = model
+                break
+            except Exception as e:
+                last = e
+        if out is None:
+            raise last
+        out["extracted_by"] = used
         _clean(out)
         if not out.get("qty"):  # deterministic backstop: the model often drops quantities
             out["qty"] = _qty(" ".join(t for s, t in turns if s == "user"))
         if not out.get("complaint_issue"):  # a complaint must never be lost to model randomness
             out["complaint_issue"] = _complaint(turns)
+        if not out.get("requests"):  # nor a request the customer clearly made
+            out["requests"] = _requests(turns, role)
         return out
     except Exception as e:  # LLM down must never break write-back
         last_user = next((t for s, t in reversed(turns) if s == "user"), "")
         return {"one_line": f"{channel} conversation ({len(turns)} turns)", "summary": last_user[:120],
                 "next_step": None, "language": "Hinglish", "sentiment": "neutral", "closed": False,
                 "qty": _qty(" ".join(t for s, t in turns if s == "user")),
-                "complaint_issue": _complaint(turns),
+                "complaint_issue": _complaint(turns), "requests": _requests(turns, role),
                 "extracted_by": f"fallback ({type(e).__name__})"}
 
 
@@ -99,6 +125,24 @@ def _complaint(turns):
     return None
 
 
+REQUEST_RULES = (  # (type, roles, pattern on the customer's own words): the rule backstop for the LLM
+    ("post_requirement", ("buyer",), r"(requirement|zaroorat).{0,40}(post|daal|bhej|forward)|sellers? (ko|se) (bhej|connect)|post kar"),
+    ("send_enquiry", ("buyer",), r"(enquiry|inquiry) (bhej|send|kar)"),
+    ("catalogue_update", ("seller",), r"(catalog|catalogue|listing).{0,40}(add|update|daal|badal|change)|photo.{0,30}(add|daal|upload|laga)"),
+    ("price_update", ("seller",), r"(price|rate|daam).{0,30}(badal|change|update|kam|badha)"),
+    ("callback", ("buyer", "seller"), r"(call ?back|wapas call|executive|kisi insaan) .{0,30}(karo|karna|kar do|chahiye|baat)"),
+)
+
+
+def _requests(turns, role):
+    said = " ".join(t for s, t in turns if s == "user")
+    out = []
+    for typ, roles, pat in REQUEST_RULES:
+        if role in roles and re.search(pat, said, re.I):
+            out.append({"type": typ, "qty": _qty(said), "note": "from the customer's words (rule)"})
+    return out
+
+
 def _clean(out):
     """Drop junk the model sometimes returns (schema echoes, placeholders): facts must look like facts."""
     for k in ("qty", "spec", "price", "product", "next_step", "complaint_seller"):
@@ -108,3 +152,5 @@ def _clean(out):
             out[k] = None
     if out.get("qty") and not re.search(r"\d", str(out["qty"])):
         out["qty"] = None
+    reqs = out.get("requests") if isinstance(out.get("requests"), list) else []
+    out["requests"] = [r for r in reqs if isinstance(r, dict) and r.get("type") in REQUEST_TYPES][:3]

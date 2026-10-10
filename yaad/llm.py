@@ -43,6 +43,23 @@ def chat(messages, model=None, temperature=0.2, max_tokens=800, json_schema=None
     raise LLMError(str(last))
 
 
+def claude_chat(messages, max_tokens=400, temperature=0.3):
+    """Demo-only chat via Anthropic's Messages API (OpenAI-shaped messages in, text out). Synthetic data only."""
+    if not config.ANTHROPIC_API_KEY:
+        raise LLMError("ANTHROPIC_API_KEY not set")
+    system = "\n\n".join(m["content"] for m in messages if m["role"] == "system")
+    turns = [{"role": m["role"], "content": m["content"]} for m in messages if m["role"] in ("user", "assistant")]
+    while turns and turns[0]["role"] == "assistant":  # the API wants the user first: fold our opening into context
+        system += f"\n\nYour first message (already sent): {turns.pop(0)['content']}"
+    r = httpx.post("https://api.anthropic.com/v1/messages", timeout=60,
+                   headers={"x-api-key": config.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01"},
+                   json={"model": config.CLAUDE_CHAT_MODEL, "system": system, "messages": turns,
+                         "max_tokens": max_tokens, "temperature": temperature})
+    if r.status_code >= 400:
+        raise LLMError(f"HTTP {r.status_code}: {r.text[:300]}")
+    return "".join(b.get("text", "") for b in r.json().get("content", []) if b.get("type") == "text").strip()
+
+
 def _strip(text):
     return re.sub(r"<think>.*?</think>", "", text, flags=re.S).strip()
 

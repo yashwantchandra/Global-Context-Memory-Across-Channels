@@ -9,7 +9,7 @@ os.environ["SARVAM_LLM_API_KEY"] = ""
 
 import pytest  # noqa: E402
 
-from yaad import config, context, extract, story, updater  # noqa: E402
+from yaad import config, context, db, extract, story, updater  # noqa: E402
 
 config.SARVAM_LLM_API_KEY = ""
 
@@ -168,3 +168,34 @@ def test_resetting_one_persona_keeps_the_other():
     play("raju", upto=5)
     story.reset("kaju")
     assert polo(context.build("SYN-B-2001", "buyer"))["stage"] == "PROMISED"  # Raju's call survives
+
+
+def test_requests_go_to_the_team_queue(monkeypatch):
+    def asking_stub(turns, role, channel):
+        out = fake_conversation(turns, role, channel)
+        out["requests"] = [{"type": "post_requirement", "product": "Polo T-Shirt", "qty": "500 pcs",
+                            "note": "send requirement to responsive sellers"}]
+        return out
+    story.reset("raju")
+    monkeypatch.setattr(extract, "conversation", asking_stub)
+    r = updater.apply({"glid": "SYN-B-2001", "role": "buyer", "type": "conversation", "synthetic": 1,
+                       "payload": {"channel": "WhatsApp chat", "turns": [["user", "500 polo ki requirement sellers ko bhej do"]]}})
+    q = db.requests("SYN-B-2001", "buyer")
+    assert r["requests"] and len(q) == 1 and q[0]["type"] == "post_requirement"
+    assert q[0]["details"]["qty"] == "500 pcs" and q[0]["thread_id"] == r["thread_id"]
+    story.reset("raju")
+    assert not db.requests("SYN-B-2001", "buyer")  # a reset clears the persona's queue
+
+
+def test_unfinished_chat_is_recovered_from_saved_turns():
+    from yaad.channels import chat
+    story.reset("raju")
+    c = chat.Chat("SYN-B-2001", "buyer")
+    c.open()
+    c._turn("user", "ab 500 piece chahiye, quote whatsapp pe bhej do")
+    chat.CHATS.pop(c.id)  # the tab closed: end() never ran
+    assert db.unfinished_chats("SYN-B-2001", "buyer")
+    c2 = chat.Chat("SYN-B-2001", "buyer")
+    assert len(c2.recovered) == 1 and not db.unfinished_chats("SYN-B-2001", "buyer")
+    assert any("500" in k for k in polo(context.build("SYN-B-2001", "buyer"))["known"])
+    chat.CHATS.pop(c2.id)

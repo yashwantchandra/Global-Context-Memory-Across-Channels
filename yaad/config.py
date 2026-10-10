@@ -19,6 +19,11 @@ SARVAM_APP_ID = os.environ.get("SARVAM_APP_ID", "")
 # An uncommitted agent is reachable only with its version pinned.
 SARVAM_APP_VERSION = int(os.environ.get("SARVAM_APP_VERSION", "1")) or None
 CHAT_MODEL = "sarvam-105b-conversations"
+# Demo-only switch: DEMO_CHAT_PROVIDER=claude answers the chat with Claude, for SYNTHETIC GLIDs only (customer data
+# may go only to Sarvam). The UI labels which model answered. Anything else = Sarvam.
+DEMO_CHAT_PROVIDER = os.environ.get("DEMO_CHAT_PROVIDER", "sarvam").lower()
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
+CLAUDE_CHAT_MODEL = os.environ.get("CLAUDE_CHAT_MODEL", "claude-sonnet-5-5")
 # Extraction runs with reasoning off (with reasoning on, sarvam-105b spent the token budget thinking).
 EXTRACT_MODEL = os.environ.get("YAAD_EXTRACT_MODEL", "sarvam-105b-conversations")
 

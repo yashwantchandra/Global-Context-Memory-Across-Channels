@@ -79,7 +79,13 @@ def get_context(glid: str, role: Optional[str] = None, format: str = "json"):
 def tables(glid: str, role: Optional[str] = None):
     evs = db.events(glid, role)
     ths = [t for r in ([role] if role else ["buyer", "seller"]) for t in db.threads(glid, r)]
-    return {"events": evs[-30:], "threads": ths}
+    return {"events": evs[-30:], "threads": ths, "requests": db.requests(glid, role)}
+
+
+@app.get("/v1/requests")
+def requests_queue(glid: Optional[str] = None, role: Optional[str] = None, status: Optional[str] = None):
+    """The IndiaMART team's queue: what customers asked us to do (post a requirement, update the catalogue, …)."""
+    return {"requests": db.requests(glid, role, status)}
 
 
 @app.get("/v1/stats")
@@ -132,7 +138,8 @@ class Say(BaseModel):
 @app.post("/v1/chat/start")
 def chat_start(b: Who):
     c = Chat(b.glid, b.role)
-    return {"chat_id": c.id, "opening": c.open(), "context_tokens": c.ctx["tokens"]}
+    return {"chat_id": c.id, "opening": c.open(), "context_tokens": c.ctx["tokens"], "model": c.model,
+            "recovered": len(c.recovered)}
 
 
 @app.post("/v1/chat/{cid}/say")
@@ -140,7 +147,7 @@ async def chat_say(cid: str, b: Say):
     c = CHATS.get(cid) or _404()
     t0 = time.time()
     reply = await c.say(b.text)
-    return {"reply": reply, "ms": round((time.time() - t0) * 1000)}
+    return {"reply": reply, "ms": round((time.time() - t0) * 1000), "model": c.model}
 
 
 @app.post("/v1/chat/{cid}/end")

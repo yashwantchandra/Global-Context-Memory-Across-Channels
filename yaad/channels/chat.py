@@ -4,28 +4,45 @@ import asyncio
 import json
 import uuid
 
-from .. import config, context, llm, prompts, updater
+from .. import config, context, db, llm, prompts, updater
 
 CHATS = {}
+
+
+def recover(glid, role):
+    """Write back chats whose end never came (tab closed, server restarted), from the turns saved as they happened."""
+    done = []
+    for cid, c in db.unfinished_chats(glid, role).items():
+        if cid in CHATS:
+            continue  # still live
+        if any(s == "user" for s, _ in c["turns"]):
+            done.append(updater.apply({"glid": glid, "role": role, "type": "conversation", "synthetic": 1,
+                                       "payload": {"turns": c["turns"], "channel": c["channel"], "recovered": True}}))
+        db.end_chat(cid)
+    return done
 
 
 class Chat:
     def __init__(self, glid, role, channel="WhatsApp chat"):
         self.id = uuid.uuid4().hex[:8]
         self.glid, self.role, self.channel = glid, role, channel
+        self.recovered = recover(glid, role)  # an earlier chat that never reached end() is written back first
         self.ctx = context.build(glid, role)
         self.messages = [{"role": "system", "content": prompts.system_prompt(role, channel, self.ctx["md"])}]
         self.turns = []
+        demo_claude = (config.DEMO_CHAT_PROVIDER == "claude" and config.ANTHROPIC_API_KEY
+                       and str(glid).startswith("SYN-"))  # real customers always stay on Sarvam
+        self.model = config.CLAUDE_CHAT_MODEL if demo_claude else config.CHAT_MODEL
         CHATS[self.id] = self
 
     def open(self):
         text = self.ctx["opening"]  # straight from memory: no LLM wait
         self.messages.append({"role": "assistant", "content": text})
-        self.turns.append(("bot", text))
+        self._turn("bot", text)
         return text
 
     async def say(self, text):
-        self.turns.append(("user", text))
+        self._turn("user", text)
         latest = context.build(self.glid, self.role)
         note = ""
         sig = lambda c: json.dumps([c["threads"], c["opening"]], sort_keys=True, default=str)
@@ -36,6 +53,15 @@ class Chat:
                     "Mention the new activity itself naturally; never say 'memory', 'record' or 'update'.]\n")
         self.messages.append({"role": "user", "content": note + text})
         reply = ""
+        if self.model.startswith("claude"):  # demo-only, synthetic customers only (see config.DEMO_CHAT_PROVIDER)
+            try:
+                reply = await asyncio.to_thread(llm.claude_chat, self.messages)
+            except llm.LLMError:
+                self.model = config.CHAT_MODEL  # fall back to Sarvam for the rest of this chat
+        if reply.strip():
+            self.messages.append({"role": "assistant", "content": reply.strip()})
+            self._turn("bot", reply.strip())
+            return reply.strip()
         # the API sometimes returns empty content under load: retry with backoff, then the other Sarvam model
         plan = ((config.CHAT_MODEL, 0.3, None), (config.CHAT_MODEL, 0.5, None), (config.CHAT_MODEL, 0.6, 6),
                 ("sarvam-105b", 0.4, 6))
@@ -51,13 +77,20 @@ class Chat:
             pass
         reply = reply.strip() or "Ji, ek second, main check karke batati hoon."
         self.messages.append({"role": "assistant", "content": reply})
-        self.turns.append(("bot", reply))
+        self._turn("bot", reply)
         return reply
+
+    def _turn(self, speaker, text):
+        self.turns.append((speaker, text))
+        db.add_turn(self.id, self.glid, self.role, self.channel, speaker, text)  # saved now, not only at end()
 
     async def end(self):
         CHATS.pop(self.id, None)
         if not any(s == "user" for s, _ in self.turns):
+            db.end_chat(self.id)
             return {"skipped": "no customer messages"}
-        return await asyncio.to_thread(updater.apply, {
+        res = await asyncio.to_thread(updater.apply, {
             "glid": self.glid, "role": self.role, "type": "conversation", "synthetic": 1,
             "payload": {"turns": self.turns, "channel": self.channel}})
+        db.end_chat(self.id)
+        return res

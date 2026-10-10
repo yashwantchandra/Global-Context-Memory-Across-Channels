@@ -203,6 +203,15 @@ def apply(ev, mirror=True):
             cb["summary"] = f"Callback honoured on {p.get('channel', 'call')} ({ts[:10]})"
             db.save_thread(cb)
 
+    # ---- what the customer asked IndiaMART to do goes to the team's request queue (one row per request)
+    out["requests"] = []
+    for r in (x or {}).get("requests") or []:
+        row = {"glid": ev["glid"], "role": ev["role"], "type": r["type"], "product": r.get("product") or t["title"],
+               "details": {k: r[k] for k in ("qty", "price", "location", "note") if r.get(k)},
+               "channel": p.get("channel"), "thread_id": t["thread_id"], "ts": ts, "synthetic": ev.get("synthetic", 0)}
+        row["request_id"] = db.add_request(row)
+        out["requests"].append(row)
+
     # ---- a complaint mentioned inside a conversation becomes its own problem thread
     if x and x.get("complaint_issue"):
         c = _complaint({**ev, "type": "complaint"}, x["complaint_issue"], x.get("complaint_seller"),

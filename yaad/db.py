@@ -44,8 +44,19 @@ CREATE TABLE IF NOT EXISTS threads (
 );
 CREATE INDEX IF NOT EXISTS ix_threads ON threads(glid, role, last_activity);
 CREATE TABLE IF NOT EXISTS freshness (event_id INTEGER, glid TEXT, role TEXT, received_at REAL, ready_at REAL, ms REAL);
+CREATE TABLE IF NOT EXISTS chat_turns (          -- every chat message as it happens: a closed tab loses nothing
+  chat_id TEXT, glid TEXT, role TEXT, channel TEXT, speaker TEXT, text TEXT, ts TEXT, ended INTEGER DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS ix_chat_turns ON chat_turns(glid, role, ended);
+CREATE TABLE IF NOT EXISTS requests (            -- things the customer asked IndiaMART to do: a queue for the team
+  request_id INTEGER PRIMARY KEY AUTOINCREMENT,
+  glid TEXT, role TEXT, type TEXT,               -- post_requirement | send_enquiry | catalogue_update | price_update | callback
+  product TEXT, details TEXT,                    -- JSON {qty, price, location, note}
+  channel TEXT, thread_id TEXT, status TEXT DEFAULT 'new', ts TEXT, synthetic INTEGER DEFAULT 0
+);
 """
-JSON_COLS = {"facts": {}, "sellers": [], "links": {}, "flags": {}, "payload": {}, "activity": {}, "interests": []}
+JSON_COLS = {"facts": {}, "sellers": [], "links": {}, "flags": {}, "payload": {}, "activity": {}, "interests": [],
+             "details": {}}
 
 
 def conn() -> sqlite3.Connection:
@@ -173,8 +184,46 @@ def freshness_stats():
 def wipe(glids):
     c = conn()
     for g in glids:
-        c.execute("DELETE FROM events WHERE glid=?", (g,))
-        c.execute("DELETE FROM threads WHERE glid=?", (g,))
-        c.execute("DELETE FROM freshness WHERE glid=?", (g,))
-        c.execute("DELETE FROM users WHERE glid=?", (g,))
+        for table in ("events", "threads", "freshness", "users", "chat_turns", "requests"):
+            c.execute(f"DELETE FROM {table} WHERE glid=?", (g,))
     c.commit()
+
+
+# ---------------------------------------------------------------- chat turns (saved as they happen)
+def add_turn(chat_id, glid, role, channel, speaker, text):
+    conn().execute("INSERT INTO chat_turns (chat_id, glid, role, channel, speaker, text, ts) VALUES (?,?,?,?,?,?,?)",
+                   (chat_id, glid, role, channel, speaker, text, now()))
+    conn().commit()
+
+
+def unfinished_chats(glid, role):
+    """{chat_id: {channel, turns}} for chats whose end was never written back (tab closed, server restarted)."""
+    out = {}
+    for r in conn().execute("SELECT * FROM chat_turns WHERE glid=? AND role=? AND ended=0 ORDER BY rowid", (glid, role)):
+        c = out.setdefault(r["chat_id"], {"channel": r["channel"], "turns": []})
+        c["turns"].append((r["speaker"], r["text"]))
+    return out
+
+
+def end_chat(chat_id):
+    conn().execute("UPDATE chat_turns SET ended=1 WHERE chat_id=?", (chat_id,))
+    conn().commit()
+
+
+# ---------------------------------------------------------------- requests for the IndiaMART team
+def add_request(r):
+    cur = conn().execute(
+        "INSERT INTO requests (glid, role, type, product, details, channel, thread_id, ts, synthetic) VALUES (?,?,?,?,?,?,?,?,?)",
+        (r["glid"], r["role"], r["type"], r.get("product"), json.dumps(r.get("details") or {}, ensure_ascii=False),
+         r.get("channel"), r.get("thread_id"), r.get("ts") or now(), int(r.get("synthetic", 0))))
+    conn().commit()
+    return cur.lastrowid
+
+
+def requests(glid=None, role=None, status=None):
+    q, args = "SELECT * FROM requests WHERE 1=1", []
+    for col, v in (("glid", glid), ("role", role), ("status", status)):
+        if v:
+            q += f" AND {col}=?"
+            args.append(v)
+    return [_row(r) for r in conn().execute(q + " ORDER BY request_id DESC", args)]

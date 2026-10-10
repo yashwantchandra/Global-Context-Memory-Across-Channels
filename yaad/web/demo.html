@@ -487,19 +487,21 @@ async function openChat(){
   closeVoice(); $('chatp').classList.remove('hidden'); $('msgs').innerHTML='';
   $('chat-av').innerHTML=avatarSVG(S.role); $('chat-av').style.overflow='hidden'; $('chat-title').textContent=S.title.split(' ·')[0]+' · WhatsApp';
   const d=await api('POST','/v1/chat/start',{glid:S.glid,role:S.role}); chatId=d.chat_id;
-  addMsg('sys',`The bot read ${S.role}.md (${d.context_tokens} tokens) before the first message`); addMsg('bot',d.opening,'from memory · no wait');
+  if(d.recovered) addMsg('sys',`Recovered ${d.recovered} unfinished chat(s) from saved messages and wrote them to memory first`);
+  addMsg('sys',`The bot read ${S.role}.md (${d.context_tokens} tokens) before the first message · replies by ${d.model}`); addMsg('bot',d.opening,'from memory · no wait');
   $('inp').focus();
 }
 async function send(){
   const t=$('inp').value.trim(); if(!t||!chatId) return; $('inp').value=''; addMsg('user',t);
   addMsg('bot','typing…'); const typing=$('msgs').lastElementChild;
-  const d=await api('POST',`/v1/chat/${chatId}/say`,{text:t}); typing.remove(); addMsg('bot',d.reply,`${d.ms} ms`);
+  const d=await api('POST',`/v1/chat/${chatId}/say`,{text:t}); typing.remove(); addMsg('bot',d.reply,`${d.ms} ms · ${d.model}`);
 }
 $('inp').addEventListener('keydown',e=>{ if(e.key==='Enter') send(); });
 async function endChat(){
   if(!chatId) return; addMsg('sys','Saving the conversation to memory…');
   const r=await api('POST',`/v1/chat/${chatId}/end`); chatId=null;
   addMsg('sys',`Saved → ${(r.thread_id||'').split('-')[0]} ${r.thread||''} [${nice(r.stage)}] in ${r.ms} ms`+((r.mirrored||[]).length?` · also updated: ${r.mirrored.map(m=>m.thread+' ['+nice(m.stage)+']').join(', ')}`:''));
+  (r.requests||[]).forEach(q=>addMsg('sys',`Request #${q.request_id} → IndiaMART team: ${q.type.replace(/_/g,' ')} · ${q.product||''}${q.details&&q.details.note?' · '+q.details.note:''}`));
   setTimeout(()=>{ closeChat(); renderRight(S.steps[step]); },1400);
 }
 function closeChat(){ $('chatp').classList.add('hidden'); }
@@ -582,7 +584,8 @@ async function replay(){
 }
 function showSaved(r){
   const extra=(r.mirrored||[]).map(m=>`${esc(m.thread)} [${nice(m.stage)}]`).join(', ');
-  const html=`<div class="note ok">✓ Saved to memory: <b>${esc((r.thread_id||'').split('-')[0])} ${esc(r.thread)}</b> → ${esc(nice(r.stage))} in ${r.ms} ms${extra?`<br>Also updated: ${extra}`:''}</div>`;
+  const reqs=(r.requests||[]).map(q=>`#${q.request_id} ${esc(q.type.replace(/_/g,' '))} · ${esc(q.product||'')}`).join(', ');
+  const html=`<div class="note ok">✓ Saved to memory: <b>${esc((r.thread_id||'').split('-')[0])} ${esc(r.thread)}</b> → ${esc(nice(r.stage))} in ${r.ms} ms${extra?`<br>Also updated: ${extra}`:''}${reqs?`<br>Request → IndiaMART team: ${reqs}`:''}</div>`;
   if(!$('voicep').classList.contains('hidden')) $('v-note').innerHTML=html; else if(!$('chatp').classList.contains('hidden')) addMsg('sys',html.replace(/<[^>]+>/g,''));
 }
 </script>
