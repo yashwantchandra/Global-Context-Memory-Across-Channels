@@ -179,7 +179,7 @@ This is a **dev-time tool, not part of the runtime.** It lets Claude Code config
 
 These organiser resources were still "to be shared" as of 8 Oct: the starter API list, sample GLIDs, sample voice and WhatsApp conversations, and the current bot prompt. Add their locations here once they arrive.
 
-## Code (built 9 Oct)
+## Code (built 9–10 Oct)
 
 - Package `globalctx/` (not `gc`: that name clashes with Python's built-in garbage-collector module).
 - Commands:
@@ -190,15 +190,26 @@ These organiser resources were still "to be shared" as of 8 Oct: the starter API
   - `python -m globalctx.voice.sdk_session`
   - `python -m globalctx.voice.phone`
   - `python -m globalctx.samples`
+  - `python -m globalctx.cases samples/cases/*.json` (synthetic case GLIDs: Dipu `910000101`, Raju `SYN-B-2001`)
+  - `python -m globalctx.evals` (about 2.5 min, about 120 Sarvam LLM calls; writes `samples/evals/`)
+  - `python -m globalctx.reset --glid <glid>`
   - `pytest tests`
 - Data, the SQLite DB and real profile files live in gitignored `data/`. Only redacted `samples/` are committed.
-- The hosted agent is `Conversatio-c49cd61c-ee22` in the **team workspace** (org `01a1109e-edab-…`, workspace `01a1109e-edb1-…`), configured through the project Sarvam MCP. `Conversatio-f58d078f-8b4b` in the personal workspace is an identically configured backup. Its prompt source is `globalctx/agent_prompt.md`.
+- The hosted agent is `Conversatio-c49cd61c-ee22` in the **team workspace** (org `01a1109e-edab-…`, workspace `01a1109e-edb1-…`), configured through the project Sarvam MCP. `Conversatio-f58d078f-8b4b` in the personal workspace is a backup with the older prompt (not updated on 10 Oct). Its prompt source is `globalctx/agent_prompt.md`.
   - Input variables: context, role, glid, opening.
   - Output variables: call_summary, requirement, quantity, callback_time, next_step, disposition.
-  - It is still uncommitted (draft v1). Commit only with the user's OK.
+  - It is still uncommitted (draft v1). Commit only with the user's OK. The draft prompt was updated on 10 Oct (name asked at most once, no unprompted needs).
+  - The draft's *default* variables still hold Dipu's file from 9 Oct (old sections). Refresh or reset them before any call that relies on defaults.
 - The SDK and analytics need `SARVAM_AGENTS_API_KEY` (a Voice Agents key from indus.sarvam.ai). This is separate from `SARVAM_API_KEY`, which is used for the LLM.
 - Role-play conversations are labelled synthetic (`GC_ROLEPLAY=1`, the default).
 - **Openings are rule-based (approach C, 10 Oct) and NOT in the .md:** `narrative.template_opening`, stored in `profiles.opening`, read with `sessions.opening_for(glid, role)` and sent as the agent's `opening` variable; with 0 LLM calls per event; the agent prompt says to phrase it naturally. `GC_OPENING=llm` restores LLM openings. The LLM runs only for end-of-conversation summaries.
+- **File sections (10 Oct):** buyer = Identity, Snapshot, Buying Needs, KYC, Past Conversations, Open Threads, Engagement Signals, Do-Not-Ask; seller = Identity, Snapshot, Buyer Demand by Product, Responses & Calls, Past Conversations, Open Threads, Engagement Signals, Do-Not-Ask. Needs are grouped per product (`facts._overlap`: 2 shared specific words, or 1 for a one-word label). Seller names never appear in buyer files (counts only).
+- **Internet call (10 Oct, primary demo path):** the 🎙 Call button opens `/call/{glid}`, which uses the vendored Sarvam Web SDK (`globalctx/web/vendor/`, MIT, reused from the team's `v2` branch). `/api/sarvam/.../url` signs the WSS URL with `SARVAM_AGENTS_API_KEY` server-side and only for our agent; `/api/voice/start/{glid}` sends the file and first line; `/api/voice/end/{sid}` summarises and writes back. Use 127.0.0.1 (mic needs a secure context) and earphones. The workspace has no telephony connection, so `/api/call` only queues.
+- **Reset:** `POST /api/reset/{glid}` (and the ↺ Reset file button) deletes `session` and `request` events plus request-folder files and rebuilds; source data and team-set contacts stay. Resetting a real demo GLID wipes its role-play history.
+- **Evals:** `globalctx/evals.py` runs scripted chats with and without the file and an LLM judge (sarvam-105b); always read the flagged items (`samples/evals/manual_review.md`) before quoting numbers.
+- **Teammates' branches:** `origin/v2` (and `feature9oct`) hold a separate implementation ("Yaad", bot "Meera") with story personas Raju and Kaju in `yaad/story/`. Our `main` is `globalctx/`.
+- **Deck:** https://claude.ai/artifact/BCpB3xhVJqRs7EGhEJE242 (Slides artifact; slide sources are not in the repo).
+- **Known gaps (10 Oct):** `opening_context.latest_session` uses the newest session even if it was a voicemail (the threads already skip those); `store.purge()` is never scheduled; phone transcripts are summarised but not stored as turns; the identity check and opening are only written in Hinglish/English.
 - **Role is never hard-coded:** use `sessions.load(glid)` or `resolve.resolve(glid)` (only one / most recent / new cold start). Every file has an `## Identity` section with name and preferred language, and the opening uses both.
 - **Requests** go to `data/requests/{catalogue_updation_requests,requirements,enquiry}/<glid>.md`, with types restricted by role (`config.REQUEST_TYPES_BY_ROLE`).
 - **Phone test calls:** MCP `place_test_call` drops custom `app_variables`. To test a phone call with context, set the agent draft's *default* variables to the GLID's file, call, then reset the defaults to cold start.
