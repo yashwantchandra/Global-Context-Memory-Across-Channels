@@ -1,0 +1,25 @@
+{
+  "case": "Re-engaging a buyer with an unfulfilled BuyLead (gumboots)",
+  "glid": "910000101",
+  "role": "buyer",
+  "note": "Made-up GLID for a case study; every event is labelled synthetic.",
+  "profile": {
+    "first_name": "Dipu", "city": "Rajkot", "country": "India", "customer_type": "Repeat",
+    "registered_since": "11 Y", "mobile_verified": "Verified",
+    "buying_behaviour": "calls local suppliers himself, compares a few quickly, returns to the preferred one; prefers Rajkot/Gujarat sellers; active on WhatsApp"
+  },
+  "contact": {"contact_name": "Dipu", "preferred_language": "Hindi",
+              "language_note": "offer Gujarati in the first turn"},
+  "buylead": {
+    "ts": "2026-09-28T11:00:00", "id": "case-bl-gumboots",
+    "title": "Rubber half-length gumboots (construction)",
+    "details": "50 pairs, rubber, half length, construction",
+    "suppliers_connected": 0,
+    "unknown": ["budget", "delivery site", "timeline", "sizes", "steel toe"]
+  },
+  "past_needs": [
+    {"ts": "2026-04-15T10:00:00", "item": "Tata Shudh cement"},
+    {"ts": "2026-04-18T10:00:00", "item": "red oxide flooring"},
+    {"ts": "2025-12-10T10:00:00", "item": "split/blanched peanuts"}
+  ]
+}

@@ -42,7 +42,12 @@ Open http://127.0.0.1:8765. It has:
 - **+ new activity**, which posts a synthetic enquiry or buy requirement and shows how many ms the file took to update.
 - A live **freshness log**.
 
-Voice (channel 1) uses the hosted Sarvam agent, with the file passed in when the session starts:
+Voice (channel 1) uses the hosted Sarvam agent, with the file passed in when the session starts. The easiest way
+is the **🎙 Call** button in the web app (or `http://127.0.0.1:8765/call/<glid>`): an internet call from the laptop
+mic, no phone line needed. Use earphones. The transcript is written back the moment you hang up. **↺ Reset file**
+removes the conversations and requests from our channels, so a demo can be replayed.
+
+From the command line:
 ```bash
 .venv/bin/python -m globalctx.voice.sdk_session --role seller --glid <glid>          # laptop mic (needs PyAudio)
 .venv/bin/python -m globalctx.voice.sdk_session --role seller --glid <glid> --chat   # same agent over text
@@ -51,9 +56,17 @@ Voice (channel 1) uses the hosted Sarvam agent, with the file passed in when the
 ```
 Tests: `.venv/bin/python -m pytest -q tests`.
 
+Synthetic case GLIDs (no customer data), with their built files, are in `samples/cases/`:
+Dipu (`910000101`, gumboots) and Raju (`SYN-B-2001`, Polo T-shirts, from the team's v2 story). Load them with
+`.venv/bin/python -m globalctx.cases samples/cases/*.json`.
+
 Evals (about 2.5 min, about 120 Sarvam LLM calls): `.venv/bin/python -m globalctx.evals`. It scores the PS02 metrics
 (re-asks with and without the file, resuming the thread, the opening, cold start, privacy, size, freshness) over 3
 runs per GLID, and writes `samples/evals/eval_results.md`. Our read of every flagged item is in `samples/evals/manual_review.md`.
+
+## Presentation
+The deck (architecture, opening logic, write-back flowchart, evals, one-slide summary):
+https://claude.ai/artifact/BCpB3xhVJqRs7EGhEJE242 (private until shared from its Share menu; downloads as .pptx or PDF).
 
 ## Sarvam agent
 - Agent ID: `Conversatio-c49cd61c-ee22` (team workspace).

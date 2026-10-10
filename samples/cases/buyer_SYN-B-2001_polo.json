@@ -1,0 +1,33 @@
+{
+  "case": "Raju: returning buyer with an unfinished Polo T-shirt deal (from the team's v2 story, yaad/story/raju.json)",
+  "glid": "SYN-B-2001",
+  "role": "buyer",
+  "note": "Synthetic persona shared with the v2 branch; every event is labelled synthetic.",
+  "profile": {
+    "first_name": "Raju",
+    "city": "Delhi",
+    "country": "India",
+    "customer_type": "Repeat",
+    "gst_status": "Verified",
+    "enq_90d": "10",
+    "buying_behaviour": "active buyer: 10 enquiries, 20 seller calls and 10 buy-leads in 90 days; Tier 1 city"
+  },
+  "contact": {
+    "contact_name": "Raju",
+    "preferred_language": "Hinglish"
+  },
+  "buylead": {
+    "ts": "2026-10-05T11:00:00",
+    "id": "raju-bl-polo",
+    "title": "Polo T-Shirt",
+    "details": "200 pcs, cotton pique, logo print; quoted Rs 240/pc",
+    "suppliers_connected": 2,
+    "unknown": ["delivery date", "sizes", "colours"]
+  },
+  "activity": [
+    {"ts": "2026-10-10T09:45:00", "type": "C2C", "category": "Polo T-Shirt", "keyword": "-", "seller_glid": "SYN-S-1001"},
+    {"ts": "2026-10-10T09:30:00", "type": "Search", "category": "Polo T-Shirt", "keyword": "polo t shirt", "seller_glid": "0"},
+    {"ts": "2026-10-07T12:00:00", "type": "ENQ", "category": "Polo T-Shirt", "keyword": "polo t shirt", "seller_glid": "SYN-S-1007"},
+    {"ts": "2026-10-05T10:30:00", "type": "Search", "category": "Polo T-Shirt", "keyword": "polo t shirt", "seller_glid": "0"}
+  ]
+}
