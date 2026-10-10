@@ -79,7 +79,16 @@
     - **What we learned:** the judge needs the known-facts list and examples of indirect asks ("aap kya khareedna
       chahte hain?"), otherwise it misses re-asks in the baseline. It also flagged the user's own name as a privacy
       leak, and "9 Oct" vs "09 Oct" as an invented number. Always read the flagged items before you publish a number.
-11. **Privacy:** role-play conversations on real GLIDs are labelled synthetic, and `samples/` is generated with GLIDs, people and companies redacted.
+11. **Internet calls instead of telephony (Day 2).** Our workspace has no telephony connection, so the Call
+    button now starts a browser call: laptop mic ⇄ the hosted Sarvam agent over a secure WebSocket.
+    - We reused a teammate's work from the `v2` branch: the vendored Sarvam Web SDK (0.0.42, MIT) and their
+      signing-proxy design. Our server adds the Voice Agents key when it fetches a single-use signed URL, so the
+      key never reaches the browser, and it refuses any agent but ours.
+    - The transcript arrives live in the browser and is written back when the call ends: one summary, one event,
+      and the file is rebuilt in about 10 ms.
+    - **Reset file** (button, `POST /api/reset/{glid}`, `python -m globalctx.reset`) removes the conversations
+      and requests from our channels and rebuilds the file from source data, so a demo can be replayed.
+12. **Privacy:** role-play conversations on real GLIDs are labelled synthetic, and `samples/` is generated with GLIDs, people and companies redacted.
 
 ## What we learned
 - Keeping facts deterministic made the files trustworthy and fast. The LLM is the slowest part and the easiest one to get wrong.

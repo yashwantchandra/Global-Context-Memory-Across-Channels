@@ -134,9 +134,11 @@ async function show(){
   const role = cur.role || (await (await fetch(`/api/resolve/${cur.glid}`)).json()).role;
   $('who').innerHTML = `<span>${esc(cur.name)} · ${role} ${esc(cur.glid)}</span>
     <button class="act ghost" onclick="simulate('${role}','${cur.glid}')">+ new activity</button>
-    <button class="callbtn" onclick="openCall()">📞 Call</button>`;
+    <button class="act ghost" onclick="resetFile()" title="Remove conversations and requests from our channels">↺ Reset file</button>
+    <button class="callbtn" onclick="openWebCall()">🎙 Call</button>`;
   if (tab === 'view') $('pane').innerHTML = `<iframe src="/view/${cur.glid}?embed=1"></iframe>`;
   if (tab === 'chat') $('pane').innerHTML = `<iframe src="/chat/${role}/${cur.glid}?embed=1"></iframe>`;
+  if (tab === 'call') $('pane').innerHTML = `<iframe src="/call/${cur.glid}?embed=1" allow="microphone; autoplay"></iframe>`;
   if (tab === 'file') {
     const md = await (await fetch(`/api/profile/${role}/${cur.glid}`)).text();
     $('pane').innerHTML = `<pre>${esc(md)}</pre>`;
@@ -161,6 +163,13 @@ async function openCall(){
     ? '<b>Live dialing</b> via Sarvam instant outbound, with this file passed in for the call.'
     : '<b>No telephony connection on the workspace yet</b>, so the call is <b>queued</b>. Ask Claude to “call the queue” and it is placed with this file loaded. Add SARVAM_CONNECTION_ID and SARVAM_AGENT_NUMBER to .env for one-click dialing.') + '<br><br>' + poll;
   $('callModal').classList.add('on');
+}
+function openWebCall(){ if (!cur) return; tab = 'call'; show(); }
+async function resetFile(){
+  if (!cur || !confirm(`Reset ${cur.name}'s file?\n\nThis removes every conversation and request from our channels for this GLID and rebuilds the file from its source data. It can't be undone.`)) return;
+  const r = await (await fetch(`/api/reset/${cur.glid}`, {method:'POST'})).json();
+  toast(`Reset: ${r.removed_events} conversation/request events removed`);
+  await loadList(); show();
 }
 function closeCall(){ $('callModal').classList.remove('on'); }
 async function savePhone(){

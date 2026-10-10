@@ -138,3 +138,22 @@ def test_needs_grouped_by_product(env):
     assert demand[0].startswith("- Toor Dal: 3 enquiries (1 unread)")
     assert "1 buyer call (1 answered)" in demand[0] and "1 BuyLead bought" in demand[0]
     assert demand[-1].startswith("- Totals (90d)")
+
+
+def test_reset_removes_channel_changes_only(env):
+    """Reset drops conversations and requests from our channels and keeps source data."""
+    config, store = env
+    monkeypatch_dir = config.DATA_DIR / "requests"
+    config.REQUESTS_DIR = monkeypatch_dir
+    from globalctx import reset, sessions
+    from globalctx.build.builder import build
+    seed_heavy_seller(store, "777", n=5)
+    before = build("777", "seller", use_llm=False)["md"]
+    sessions.record("777", "seller", "chat", "s1", {"summary": "wants 300 pipes", "requirement": "steel pipe",
+                    "requests": [{"type": "price_update", "product": "steel pipe", "price": "Rs 90/m"}]})
+    assert "wants 300 pipes" in store.get_profile("777", "seller")["md"]
+    out = reset.reset("777")
+    after = store.get_profile("777", "seller")["md"]
+    assert out["removed_events"] == 2 and "wants 300 pipes" not in after and "Pending price update" not in after
+    strip = lambda md: "\n".join(l for l in md.splitlines() if not l.startswith(("generated_at", "freshness_ms")))
+    assert strip(after) == strip(before)

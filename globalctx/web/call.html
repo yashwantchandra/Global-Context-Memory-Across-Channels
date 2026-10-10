@@ -1,0 +1,152 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Internet call</title>
+<style>
+:root{--brand:#3b3fd8;--brand2:#7b5cff;--bg:#f5f6fb;--ink:#1d2033;--sub:#5d6380;--line:#e3e5f0;--ok:#16a34a;--warn:#d97706;--err:#dc2626}
+*{box-sizing:border-box} body{margin:0;font:15px/1.5 "Inter","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+.wrap{max-width:1080px;margin:0 auto;padding:22px 18px 40px}
+.top{display:flex;justify-content:space-between;font-size:13px;color:var(--sub);margin-bottom:14px} .top a{color:var(--sub);text-decoration:none}
+.hero{background:linear-gradient(120deg,var(--brand),var(--brand2));color:#fff;border-radius:22px;padding:26px 28px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}
+.hero h1{margin:0;font-size:26px} .hero .line{opacity:.9;margin-top:4px}
+.pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px} .pill{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.28);padding:3px 11px;border-radius:99px;font-size:12.5px}
+.orb{width:120px;height:120px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,rgba(255,255,255,.35) 45%,rgba(255,255,255,.1));
+  border:2px solid rgba(255,255,255,.5);display:grid;place-items:center;font-size:42px;transition:transform .2s}
+.orb.live{animation:pulse 1.6s infinite} .orb.speaking{animation:pulse .7s infinite;background:radial-gradient(circle at 35% 35%,#fff,#ffd6a8 50%,#ff9f5a)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.55)}70%{box-shadow:0 0 0 22px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
+.grid{display:grid;grid-template-columns:1.3fr 1fr;gap:16px;margin-top:16px}
+@media(max-width:820px){.grid{grid-template-columns:1fr}.hero{grid-template-columns:1fr}}
+.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px 20px}
+.card h2{margin:0 0 12px;font-size:15px;text-transform:uppercase;letter-spacing:.06em;color:var(--sub)}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+button{font:inherit;font-weight:700;border:0;border-radius:99px;padding:11px 20px;cursor:pointer}
+.go{background:var(--ok);color:#fff} .stop{background:var(--err);color:#fff} .ghost{background:#eef0fb;color:var(--brand)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.state{font-weight:700;margin-left:6px} .state.ok{color:var(--ok)} .state.busy{color:var(--warn)} .state.err{color:var(--err)}
+.note{margin-top:12px;font-size:13.5px;color:var(--sub);background:#f7f8fd;border-radius:12px;padding:10px 12px}
+.note.ok{background:#ecfdf3;color:#166534} .note.bad{background:#fef2f2;color:#991b1b}
+.trans{display:flex;flex-direction:column;gap:8px;max-height:430px;overflow:auto;margin-top:14px}
+.msg{max-width:82%;padding:9px 13px;border-radius:14px;font-size:14.5px}
+.msg.bot{background:#eef0fb;align-self:flex-start} .msg.user{background:#e7f6ec;align-self:flex-end}
+.msg b{font-size:11.5px;display:block;color:var(--sub);text-transform:uppercase;letter-spacing:.05em}
+.say{background:#f7f8fd;border-radius:14px;padding:12px 14px;font-size:14.5px;margin-bottom:10px}
+.say .k{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--sub);font-weight:700;margin-bottom:3px}
+a.btnlink{display:inline-block;margin-top:10px;color:var(--brand);font-weight:700;text-decoration:none}
+</style></head><body><div class="wrap">
+<div class="top"><a href="/view/{{glid}}">← Customer 360</a><span>Internet call · laptop mic ⇄ Sarvam voice agent, no telephony</span></div>
+<section class="hero">
+  <div><h1 id="who">Loading…</h1><div class="line" id="line"></div><div class="pills" id="pills"></div></div>
+  <div class="orb" id="orb">🎙</div>
+</section>
+<div class="grid">
+  <div class="card"><h2>Call</h2>
+    <div class="controls">
+      <button class="go" id="start" onclick="startCall()">🎙 Start internet call</button>
+      <button class="ghost" id="mute" onclick="toggleMute()" disabled>Mute</button>
+      <button class="stop" id="end" onclick="endCall()" disabled>End call</button>
+      <span class="state" id="state">Ready</span>
+    </div>
+    <div class="note" id="note">Use earphones if you can: on laptop speakers the mic can pick up Mira's voice.</div>
+    <div class="trans" id="trans"></div>
+  </div>
+  <div class="card"><h2>What Mira knows before speaking</h2>
+    <div class="say" id="check" style="display:none"><div class="k">1 · Identity check</div><div id="checkTxt"></div></div>
+    <div class="say"><div class="k" id="openK">Opening</div><div id="openTxt"></div></div>
+    <div id="saved"></div>
+  </div>
+</div>
+</div>
+<script type="module">
+  // Sarvam Web SDK (vendored, MIT). The API key stays on our server: the SDK asks /api/sarvam/ for a single-use
+  // signed WSS URL, then the browser talks to Sarvam directly.
+  import { ConversationAgent, BrowserAudioInterface, InteractionType } from "/vendor/sarvam-conv-ai-sdk/browser.js";
+  window.SarvamSDK = { ConversationAgent, BrowserAudioInterface, InteractionType };
+</script>
+<script>
+const glid = '{{glid}}';
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let agent = null, sid = null, turns = [], live = false, muted = false;
+
+function state(t, cls=''){ $('state').textContent = t; $('state').className = 'state ' + cls; }
+function note(html, cls=''){ $('note').innerHTML = html; $('note').className = 'note ' + cls; }
+function msg(who, text){ const d = document.createElement('div'); d.className = 'msg ' + who;
+  d.innerHTML = `<b>${who === 'user' ? 'You' : 'Mira'}</b>${esc(text)}`; $('trans').appendChild(d); $('trans').scrollTop = 1e9; }
+function buttons(on){ $('start').disabled = on; $('end').disabled = !on; $('mute').disabled = !on; }
+
+(async () => {
+  const d = await (await fetch(`/api/view/${glid}`)).json();
+  const idRow = (d.sections['Identity'] || [''])[0];
+  const name = (idRow.match(/Contact: ([^·]+)/) || idRow.match(/Name: ([^·]+)/) || [])[1]?.trim();
+  const biz = (idRow.match(/Business: ([^·]+)/) || [])[1]?.trim();
+  const lang = (idRow.match(/Preferred language: ([^(·]+)/) || [])[1]?.trim();
+  const who = name && !/not known|unknown/.test(name) ? name : (biz && biz !== 'unknown' ? biz : 'New user');
+  document.title = `Call ${who}`;
+  $('who').textContent = `Call ${who}`;
+  $('line').textContent = (d.sections['Snapshot'] || [''])[0].replace(/\s*\(synthetic\)/g, '');
+  $('pills').innerHTML = `<span class="pill">${d.role} · GLID ${esc(glid)}</span>` + (lang ? `<span class="pill">🗣 ${esc(lang)}</span>` : '')
+    + `<span class="pill">data: ${esc(d.meta.data_quality)}</span>` + (d.meta.synthetic === 'true' ? '<span class="pill">contains synthetic data</span>' : '');
+  if (d.identity_check) { $('check').style.display = ''; $('checkTxt').textContent = d.identity_check; $('openK').textContent = '2 · After "yes", the opening'; }
+  $('openTxt').textContent = d.opening || '';
+})();
+
+async function startCall(){
+  if (agent) return;
+  if (!window.SarvamSDK) { note('The voice SDK did not load. Reload the page.', 'bad'); return; }
+  turns = []; $('trans').innerHTML = ''; $('saved').innerHTML = ''; buttons(true);
+  const { ConversationAgent, BrowserAudioInterface, InteractionType } = window.SarvamSDK;
+  try {
+    // microphone first, so no Sarvam session opens while the browser's permission prompt is pending
+    state('Waiting for microphone…', 'busy'); note('Allow the microphone in the browser prompt.');
+    const probe = await navigator.mediaDevices.getUserMedia({audio: {echoCancellation: true, noiseSuppression: true}});
+    probe.getTracks().forEach(t => t.stop());
+    state('Connecting…', 'busy');
+    const s = await (await fetch(`/api/voice/start/${glid}`, {method: 'POST'})).json();
+    sid = s.sid;
+    agent = new ConversationAgent({
+      apiKey: '', baseUrl: '/api/sarvam/',
+      config: {org_id: s.org_id, workspace_id: s.workspace_id, app_id: s.app_id, version: s.version,
+               user_identifier: s.user_identifier, user_identifier_type: 'custom', interaction_type: InteractionType.CALL,
+               input_sample_rate: 16000, output_sample_rate: 16000,
+               agent_variables: s.agent_variables, initial_bot_message: s.first_line},
+      audioInterface: new BrowserAudioInterface(),
+      transcriptCallback: async m => { const who = String(m.role).toLowerCase() === 'user' ? 'user' : 'bot';
+        turns.push([who, m.content]); msg(who, m.content); },
+      stateCallback: async st => { if (!live) return; $('orb').className = 'orb live' + (st === 'speaking' ? ' speaking' : '');
+        state(st === 'speaking' ? 'Mira is speaking' : st === 'listening' ? 'Listening' : String(st), 'ok'); },
+      endCallback: async () => { endCall('agent'); },
+    });
+    await agent.start();
+    if (!(await agent.waitForConnect(10))) throw new Error('could not connect to Sarvam in 10 s');
+    live = true; $('orb').className = 'orb live'; state('Live', 'ok');
+    note('Live. Speak as the customer; the transcript appears below.', 'ok');
+  } catch (err) {
+    const n = err && err.name;
+    note(esc(n === 'NotAllowedError' ? 'Microphone permission was denied: allow the mic for this page and try again.'
+      : n === 'NotFoundError' ? 'No microphone found.' : n === 'NotReadableError' ? 'The microphone is in use by another app.'
+      : `Could not start the call: ${err && err.message || err}`), 'bad');
+    state('Error', 'err'); try { await agent?.stop(); } catch (e) {} agent = null; live = false; buttons(false);
+  }
+}
+
+function toggleMute(){ if (!agent) return; muted = !muted; try { muted ? agent.mute() : agent.unmute(); } catch (e) {}
+  $('mute').textContent = muted ? 'Unmute' : 'Mute'; }
+
+async function endCall(by='user'){
+  if (!agent && !live) return;
+  const a = agent; agent = null; live = false; buttons(false); $('orb').className = 'orb';
+  try { await a?.stop(); } catch (e) {}
+  state(by === 'agent' ? 'Mira ended the call · saving…' : 'Saving to memory…', 'busy');
+  const r = await (await fetch(`/api/voice/end/${sid}`, {method: 'POST', headers: {'Content-Type': 'application/json'},
+                                                         body: JSON.stringify({turns})})).json();
+  if (!r.saved) { state('Ended'); note(`Nothing saved: ${esc(r.reason || r.detail || 'no conversation')}.`); return; }
+  state('Saved', 'ok');
+  note(`Saved. The file was rebuilt ${r.freshness_ms} ms after the call was written back.`, 'ok');
+  $('saved').innerHTML = `<div class="say" style="background:#ecfdf3"><div class="k">Written back to the file</div>${esc(r.summary || '')}
+    ${(r.request_files || []).length ? `<div style="margin-top:6px;font-size:13px;color:#166534">Request raised: ${r.request_files.length}</div>` : ''}</div>
+    <a class="btnlink" href="/view/${glid}">See the updated Customer 360 →</a>`;
+  $('start').textContent = '🎙 Call again (resumes from this call)';
+}
+
+window.addEventListener('beforeunload', () => {
+  if (live && sid) navigator.sendBeacon(`/api/voice/end/${sid}`, new Blob([JSON.stringify({turns})], {type: 'application/json'}));
+});
+</script></body></html>

@@ -1,0 +1,2 @@
+sarvam-conv-ai-sdk 0.0.42 (npm), dist/ browser files, unmodified.
+Served by yaad/api.py with extension/index resolution because the build uses extensionless imports.

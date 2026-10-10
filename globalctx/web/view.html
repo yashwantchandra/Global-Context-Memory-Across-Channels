@@ -172,19 +172,15 @@ function requestsHTML(list){
       <span class="tag ${r.status === 'pending' ? 't-amber' : 't-green'}">${r.status === 'pending' ? 'Pending' : 'Done'}</span></div>`;
   }).join('');
 }
-async function callNow(){
-  const msg = document.getElementById('callmsg');
-  const ph = await (await fetch(`/api/phone/${glid}`)).json();
-  let number = ph.phone;
-  if (!number) {
-    number = prompt('Phone number to call for this GLID (+91…)');
-    if (!number) return;
-    await fetch(`/api/phone/${glid}`, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({phone:number})});
-  }
-  const res = await fetch(`/api/call/${glid}`, {method:'POST'}); const r = await res.json();
-  msg.textContent = !res.ok ? (r.detail || 'Could not place the call')
-    : r.status === 'dialing' ? `Dialing ${r.phone}… answer the phone`
-    : `Queued call to ${r.phone}. No telephony connection yet: ask Claude to “call the queue”.`;
+async function resetFile(){
+  if (!confirm('Reset this file?\n\nThis removes every conversation and request from our channels for this GLID and rebuilds the file from its source data. It can\'t be undone.')) return;
+  const r = await (await fetch(`/api/reset/${glid}`, {method:'POST'})).json();
+  document.getElementById('callmsg').textContent = `Reset: ${r.removed_events} events removed. Reloading…`;
+  setTimeout(() => location.reload(), 800);
+}
+function callNow(){  // internet call: laptop mic <-> Sarvam voice agent, no telephony
+  if (window.parent !== window && window.parent.openWebCall) window.parent.openWebCall();
+  else location.href = `/call/${glid}`;
 }
 (async () => {
   const d = await (await fetch(`/api/view/${glid}`)).json();
@@ -218,7 +214,8 @@ async function callNow(){
       <div class="small">last ${esc(d.last_freshness.trigger === 'session' ? 'conversation' : d.last_freshness.trigger)} → file updated</div>
       <div class="small">${esc(String(d.last_freshness.at).replace('T',' ').slice(0,16))}</div>`
       : `<div class="big" style="font-size:22px">built</div><div class="small">${esc(String(m.generated_at||'').replace('T',' ').slice(0,16))}</div>`}
-      <div><button class="callnow" onclick="callNow()">📞 Call ${esc(who)}</button></div><div class="callmsg" id="callmsg"></div></div>
+      <div><button class="callnow" onclick="callNow()">🎙 Call ${esc(who)}</button>
+        <button class="callnow" style="background:transparent;color:#fff;border:1px solid rgba(255,255,255,.6)" onclick="resetFile()">↺ Reset file</button></div><div class="callmsg" id="callmsg"></div></div>
   </section>
   <div class="kpis">
     <div class="kpi"><div class="n">${threads.length}</div><div class="l">Open threads</div></div>

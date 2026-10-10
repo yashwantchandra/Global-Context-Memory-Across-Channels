@@ -162,6 +162,85 @@ def set_phone(glid: str, p: PhoneIn):
     return {"glid": glid, "phone": phonemap.add(p.phone, glid, role)}
 
 
+# ---------------------------------------------------------------- internet call (browser mic <-> Sarvam over WSS)
+VENDOR = WEB / "vendor"
+
+
+@app.get("/call/{glid}", response_class=HTMLResponse)
+def call_page(glid: str):
+    return page("call.html", glid=glid)
+
+
+@app.get("/vendor/{path:path}")
+def vendor(path: str):
+    """The vendored Sarvam Web SDK uses extensionless and folder imports: redirect to the real file so the browser
+    resolves each module's relative imports from the right URL."""
+    from fastapi.responses import FileResponse
+    base = (VENDOR / path).resolve()
+    if not str(base).startswith(str(VENDOR.resolve())):
+        raise HTTPException(404)
+    if base.is_file():
+        return FileResponse(base, media_type="text/javascript" if base.suffix == ".js" else None)
+    if base.with_name(base.name + ".js").is_file():
+        return RedirectResponse(f"/vendor/{path}.js", status_code=307)
+    if (base / "index.js").is_file():
+        return RedirectResponse(f"/vendor/{path.rstrip('/')}/index.js", status_code=307)
+    raise HTTPException(404)
+
+
+@app.post("/api/voice/start/{glid}")
+def voice_start(glid: str):
+    """Everything the browser needs to start a call except the API key: IDs, the file and the first line."""
+    from globalctx.voice import phone as ph
+    sid, opening, md = sessions.start_external(glid, None, "voice")
+    role = sessions.live(sid)["role"]
+    v = ph.variables_for(glid, role)
+    return {"sid": sid, "role": role, "org_id": config.SARVAM_ORG_ID, "workspace_id": config.SARVAM_WORKSPACE_ID,
+            "app_id": config.SARVAM_APP_ID, "version": 1, "user_identifier": glid,
+            "agent_variables": {k: v[k] for k in ("context", "role", "glid", "opening")},
+            "first_line": v["identity_check"] or v["opening"]}
+
+
+@app.get("/api/sarvam/orgs/{org}/workspaces/{ws}/apps/{app_id}/url")
+async def sarvam_signed_url(org: str, ws: str, app_id: str, interaction_type: str = "call", version: int = None):
+    """The Web SDK asks here for a single-use signed WSS URL; we add the key server-side, only for our own agent."""
+    import httpx
+    if (org, ws, app_id) != (config.SARVAM_ORG_ID, config.SARVAM_WORKSPACE_ID, config.SARVAM_APP_ID):
+        raise HTTPException(403, "not our agent")
+    params = {"interaction_type": interaction_type, **({"version": version} if version else {})}
+    async with httpx.AsyncClient(timeout=20) as c:
+        r = await c.get(f"https://apps.sarvam.ai/api/app-runtime/orgs/{org}/workspaces/{ws}/apps/{app_id}/url",
+                        params=params, headers={"X-API-Key": config.SARVAM_AGENTS_API_KEY})
+    if r.status_code != 200:
+        raise HTTPException(r.status_code, r.text[:300])
+    return r.json()
+
+
+class VoiceEnd(BaseModel):
+    turns: list
+
+
+@app.post("/api/voice/end/{sid}")
+def voice_end(sid: str, b: VoiceEnd):
+    """The call's transcript (collected live in the browser) is summarised and written back: the file updates now."""
+    if not sessions.live(sid):
+        raise HTTPException(404, "unknown or finished call")
+    for who, text in sessions.merge_partials([("user" if str(w).lower() == "user" else "bot", t) for w, t in b.turns]):
+        sessions.add_turn(sid, who, text)
+    summary, fast = sessions.end(sid)
+    if summary is None:
+        return {"saved": False, "reason": "the caller did not speak"}
+    return {"saved": True, "summary": summary.get("summary"), "freshness_ms": fast["freshness_ms"],
+            "role": fast["role"], "request_files": fast["request_files"]}
+
+
+@app.post("/api/reset/{glid}")
+def reset_glid(glid: str):
+    """Undo conversations and requests from our channels; the file goes back to its source data."""
+    from globalctx import reset
+    return reset.reset(glid)
+
+
 @app.post("/api/call/{glid}")
 def call_glid(glid: str):
     """Dial with this GLID's file (instant outbound) or, without a telephony connection, queue the call."""
