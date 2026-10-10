@@ -47,7 +47,39 @@
      - A silent caller is ended after the inactivity nudges.
      - Use the server's `status: completed` marker to detect the end of a turn.
      - Streaming STT sends growing partial transcripts, which we merge before saving.
-8. **Privacy:** role-play conversations on real GLIDs are labelled synthetic, and `samples/` is generated with GLIDs, people and companies redacted.
+8. **Cost decision (Day 2): approach C.**
+   - We compared three ways of writing the opening line:
+     - an LLM after every change
+     - an LLM just before each call
+     - rules on every change, with the agent phrasing the line
+   - We chose rules. The voice agent is already an LLM, so writing its first line with a second LLM pays twice.
+   - The result: 0 LLM calls per event, openings in 5–15 ms, and only about 1 LLM call per conversation (the summary).
+   - Rule-based openings also exposed two data bugs, which we fixed:
+     - free-text "pending" threads were being taken as real requests
+     - a callback saved as "tomorrow" before the date-conversion fix
+9. **Grouped by need, not by data source (Day 2).**
+   - Buyers had three sections for one need (enquiries, categories searched, sellers contacted). The bot had to join
+     them itself. Now "Buying Needs" has one row per product: requirement posted, searches, enquiries, sellers called.
+   - Sellers get "Buyer Demand by Product": enquiries, buyer calls and BuyLeads per product, then a totals row.
+     We avoided the name "Leads" because on IndiaMART a lead means a BuyLead specifically.
+   - **What we learned:**
+     - Buyer calls only carry an MCAT id, so we name them after the product most enquired under that MCAT.
+     - Matching on one shared word merged "Plastic Containers" with "Plastic Bottle Making Machine". Two shared
+       words (or one for a one-word label) fixed that.
+     - A chat requirement was being shown as the "details" of an unrelated posted requirement (ERP software vs
+       safety helmets). Details now attach only when they're about the same product.
+10. **Evals (Day 2).** `python -m globalctx.evals` runs a scripted 3-turn chat per GLID, once with the file and
+    once without (the cold baseline), 3 times each, and an LLM judge (sarvam-105b) marks every question that asks
+    for something already known. Exact checks cover invented numbers, size and schema.
+    - **Results:** re-asks dropped from 55 without the file to 10 with it (1 real after manual review). The bot picked
+      up the open thread 90% of the time vs 39% without. Privacy was refused 39/39, cold start was clean 6/6, and
+      freshness median was 13 ms.
+    - **What the evals caught:** the bot asked an unknown seller's name on every turn, and raised the buyer's other
+      needs unprompted. We fixed both in the prompt. Do-Not-Ask said "name" when only the business name was known.
+    - **What we learned:** the judge needs the known-facts list and examples of indirect asks ("aap kya khareedna
+      chahte hain?"), otherwise it misses re-asks in the baseline. It also flagged the user's own name as a privacy
+      leak, and "9 Oct" vs "09 Oct" as an invented number. Always read the flagged items before you publish a number.
+11. **Privacy:** role-play conversations on real GLIDs are labelled synthetic, and `samples/` is generated with GLIDs, people and companies redacted.
 
 ## What we learned
 - Keeping facts deterministic made the files trustworthy and fast. The LLM is the slowest part and the easiest one to get wrong.

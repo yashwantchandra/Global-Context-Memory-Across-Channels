@@ -94,4 +94,5 @@ def test_contact_name_captured_and_used(env):
     sessions.record("9", "seller", "phone", "s9", {"summary": "talked about dal", "contact_name": "Yashwant"})
     md = store.get_profile("9", "seller")["md"]
     assert "Business: Shiv Pulses · Contact: Yashwant" in md
-    assert "Yashwant ji" in md.split("## Suggested Opening")[1]
+    assert "## Suggested Opening" not in md                       # the file holds facts only
+    assert "Yashwant ji" in sessions.opening_for("9", "seller")    # the opening is kept beside it

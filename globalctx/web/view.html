@@ -114,7 +114,7 @@ function threadHTML(raw){
   let extra = '';
   if (label === 'Ask only if needed') {
     const items = body.replace(/^Still unknown, ask only if needed:\s*/i,'').split(/,\s*/);
-    body = 'Not known yet: Vani asks only when needed to proceed';
+    body = 'Not known yet: Mira asks only when needed to proceed';
     extra = '<div class="chips">' + items.map(i => `<span class="chip">${esc(i)}</span>`).join('') + '</div>';
   }
   return `<div class="thread"><span class="tag ${cls}">${label}</span><div class="txt">${esc(body.replace(/ · /g,' · '))}${synTag(raw)}
@@ -128,21 +128,27 @@ function eventHTML(raw){
   const ours = /\(our bot\)/.test(ch); ch = ch.replace(/\s*\(our bot\)/,'');
   const [ic, col] = CH[ch] || ['•','#94a3b8'];
   return `<div class="ev"><span class="dot" style="background:${col}">${ic}</span>
-    <div class="when">${esc(when)} · <span class="ch">${esc(ch)}</span>${ours ? ' <span class="chip" style="font-size:11px">with Vani</span>' : ''}${synTag(raw)}</div>
+    <div class="when">${esc(when)} · <span class="ch">${esc(ch)}</span>${ours ? ' <span class="chip" style="font-size:11px">with Mira</span>' : ''}${synTag(raw)}</div>
     <div>${esc(txt)}</div></div>`;
 }
+function needRowHTML(r){  // "Product: stat · stat" -> product name over its stats
+  const t = clean(r); const i = t.indexOf(': ');
+  return `<div class="fact"><div class="k">${esc(i > 0 ? t.slice(0,i) : '')}</div><div class="v">${esc(i > 0 ? t.slice(i+2) : t)}${synTag(r)}</div></div>`;
+}
 function requirementHTML(d){
-  const rows = (d.role === 'buyer' ? sec(d,'Enquiries & Status') : sec(d,'Leads & Enquiries'));
-  if (!rows.length) return '<div class="empty">No open requirement in the lookback window</div>';
-  if (d.role === 'seller') return rows.map(r => `<div class="fact"><div class="v">${esc(clean(r))}${synTag(r)}</div></div>`).join('<div style="height:8px"></div>');
-  const post = rows.find(r => /^Buy requirement posted/.test(r));
+  const rows = (d.role === 'buyer' ? sec(d,'Buying Needs') : sec(d,'Buyer Demand by Product'));
+  if (!rows.length) return `<div class="empty">${d.role === 'buyer' ? 'No buying activity' : 'No buyer demand'} in the lookback window</div>`;
+  const foot = rows.filter(r => /^(Totals|Earlier)/.test(clean(r)));
+  const footHTML = foot.length ? '<div class="foot" style="margin-top:12px">' + foot.map(r => `<span class="chip">${esc(clean(r))}</span>`).join('') + '</div>' : '';
+  if (d.role === 'seller') return '<div class="facts">' + rows.filter(r => !foot.includes(r)).map(needRowHTML).join('') + '</div>' + footHTML;
+  const post = rows.find(r => /: requirement posted \d{2} \w{3}/.test(clean(r)));
   const det = rows.find(r => /^Details:/.test(r));
-  const others = rows.filter(r => r !== post && r !== det);
+  const others = rows.filter(r => r !== post && r !== det && !foot.includes(r));
   let html = '';
   if (post) {
-    const m = clean(post).match(/^Buy requirement posted ([^:]+):\s*(.*?)(?: · (\d+) suppliers connected)?$/);
-    html += `<div class="req"><div class="title">${esc(m ? m[2] : clean(post))}</div>
-      <div class="meta">Posted ${esc(m ? m[1] : '')}${m && m[3] !== undefined ? ` · <b>${m[3]}</b> suppliers connected` : ''}${synTag(post)}</div>`;
+    const m = clean(post).match(/^(.*?): requirement posted (\d{2} \w{3})(?: · (\d+) suppliers connected)?(?: · (.*))?$/);
+    html += `<div class="req"><div class="title">${esc(m ? m[1] : clean(post))}</div>
+      <div class="meta">Posted ${esc(m ? m[2] : '')}${m && m[3] !== undefined ? ` · <b>${m[3]}</b> suppliers connected` : ''}${m && m[4] ? ` · ${esc(m[4])}` : ''}${synTag(post)}</div>`;
     if (det) {
       const dt = clean(det).replace(/^Details:\s*/,''); const conf = /confirmed on/.test(dt) && !/unconfirmed/.test(dt);
       const main = dt.replace(/\s*\([^)]*\)\s*$/,''); const st = (dt.match(/\(([^)]*)\)\s*$/)||[])[1] || '';
@@ -151,8 +157,8 @@ function requirementHTML(d){
     }
     html += '</div>';
   }
-  if (others.length) html += '<div class="foot" style="margin-top:12px">' + others.map(r => `<span class="chip">${esc(clean(r))}</span>`).join('') + '</div>';
-  return html;
+  if (others.length) html += `<div class="facts"${post ? ' style="margin-top:12px"' : ''}>` + others.map(needRowHTML).join('') + '</div>';
+  return html + footHTML;
 }
 function requestsHTML(list){
   if (!list.length) return '<div class="empty">No requests raised on our channels yet</div>';
@@ -194,9 +200,8 @@ async function callNow(){
   const pending = d.requests.filter(r => r.status === 'pending').length;
   const dna = (d.sections['Do-Not-Ask']||[''])[0];
   const dnaItems = /^Nothing yet/.test(dna) ? [] : dna.split(/;\s*/).filter(Boolean);
-  const opening = clean((d.sections['Suggested Opening']||[''])[0]);
-  const facts = [['Snapshot', snap.join(' · ')], [d.role==='seller'?'Responses & calls':'Categories searched',
-      (d.role==='seller'? sec(d,'Responses & Calls') : sec(d,'Categories Searched')).map(clean).join(' · ')],
+  const opening = clean(d.opening || '');
+  const facts = [['Snapshot', snap.join(' · ')], ['Responses & calls', sec(d,'Responses & Calls').map(clean).join(' · ')],
      ['Engagement', sec(d,'Engagement Signals').map(clean).join(' · ')],
      [d.role==='buyer'?'KYC':'Sellers', d.role==='buyer'? sec(d,'KYC').map(clean).join(' · ') : '']].filter(f => f[1]);
   document.title = `${who} · Customer 360`;
@@ -222,14 +227,14 @@ async function callNow(){
     <div class="kpi"><div class="n">${dnaItems.length}</div><div class="l">Facts never re-asked</div></div>
   </div>
   <div class="grid"><div>
-    <div class="card"><h2>What Vani says on the next call</h2>
+    <div class="card"><h2>What Mira says on the next call</h2>
       ${d.identity_check ? `<div class="step">1 · Confirm identity, then wait for "yes"</div>
-        <div class="say"><div class="who">V</div><div class="bubble check">${esc(d.identity_check)}</div></div>` : ''}
+        <div class="say"><div class="who">M</div><div class="bubble check">${esc(d.identity_check)}</div></div>` : ''}
       <div class="step">${d.identity_check ? '2 · After "yes"' : 'Opening'}</div>
-      <div class="say"><div class="who">V</div><div class="bubble">${esc(opening)}</div></div></div>
+      <div class="say"><div class="who">M</div><div class="bubble">${esc(opening)}</div></div></div>
     <div class="card"><h2>Open threads <span class="count">${threads.length}</span></h2>
-      ${threads.length ? threads.map(threadHTML).join('') : '<div class="empty">Nothing pending: Vani asks open questions</div>'}</div>
-    <div class="card"><h2>${d.role === 'buyer' ? 'Requirement' : 'Leads & enquiries'}</h2>${requirementHTML(d)}</div>
+      ${threads.length ? threads.map(threadHTML).join('') : '<div class="empty">Nothing pending: Mira asks open questions</div>'}</div>
+    <div class="card"><h2>${d.role === 'buyer' ? 'Buying needs' : 'Buyer demand by product'}</h2>${requirementHTML(d)}</div>
     <div class="card"><h2>Requests raised on our channels <span class="count">${d.requests.length}</span></h2>${requestsHTML(d.requests)}</div>
   </div><div>
     <div class="card"><h2>Conversation timeline</h2>

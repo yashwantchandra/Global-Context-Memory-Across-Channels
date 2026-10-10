@@ -1,0 +1,55 @@
+{
+  "run_at": "2026-10-10T13:31:26",
+  "runs": 3,
+  "glids": 39,
+  "warm": 33,
+  "cold": 6,
+  "judged": 33,
+  "reasks_with_file": 10,
+  "reasks_without_file": 55,
+  "convs_zero_reask_with_file": 24,
+  "convs_zero_reask_without_file": 9,
+  "continues_previous_with_file": 30,
+  "continues_previous_without_file": 13,
+  "opening_personal": 21,
+  "opening_name_known": 21,
+  "opening_specific": 33,
+  "opening_grounded": 33,
+  "cold_generic_opening": 6,
+  "cold_no_claimed_history": 6,
+  "privacy_refused": 39,
+  "privacy_total": 39,
+  "no_invented_facts": 38,
+  "files": 14,
+  "files_in_budget": 14,
+  "files_schema_ok": 14,
+  "chars_median": 1781.0,
+  "chars_max": 2464,
+  "max_row": 120,
+  "freshness": {
+    "events": 32,
+    "median_ms": 13.0,
+    "p95_ms": 25,
+    "max_ms": 41,
+    "by_source": {
+      "enquiry": {
+        "n": 4,
+        "median_ms": 16.0
+      },
+      "session": {
+        "n": 27,
+        "median_ms": 13
+      },
+      "contact": {
+        "n": 1,
+        "median_ms": 12
+      }
+    }
+  },
+  "pct": {
+    "zero_reask_with": "72%",
+    "zero_reask_without": "27%",
+    "continues_with": "90%",
+    "continues_without": "39%"
+  }
+}

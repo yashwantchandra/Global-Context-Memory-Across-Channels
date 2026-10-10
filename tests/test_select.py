@@ -94,7 +94,9 @@ def test_cold_start(env):
     for role in ("seller", "buyer"):
         md = build("999", role, use_llm=False)["md"]
         assert "data_quality: cold_start" in md
-        assert "Aap kuch khareedna chahte hain" in md  # role-neutral cold-start greeting
+        assert "## Suggested Opening" not in md                  # the file holds facts only
+        from globalctx import sessions
+        assert "Aap kuch khareedna chahte hain" in sessions.opening_for("999", role)  # role-neutral cold-start greeting
         assert list(config.SECTION_CAPS[role]) == [l[3:] for l in md.splitlines() if l.startswith("## ")]
 
 
@@ -105,3 +107,34 @@ def test_parse_roundtrip(env):
     seed_heavy_seller(store, "444", n=20)
     p = parse(build("444", "seller", use_llm=False)["md"])
     assert p["meta"]["role"] == "seller" and set(p["sections"]) == set(config.SECTION_CAPS["seller"])
+
+
+def test_needs_grouped_by_product(env):
+    """Buyer: searches, enquiries and calls for one product share a row with its posted requirement.
+    Seller: enquiries, buyer calls (matched by mcat) and BuyLeads for one product share a row; totals last."""
+    config, store = env
+    from globalctx.build.builder import build
+    b = [{"glid": "555", "role": "buyer", "source": "buyer_activity", "channel": "marketplace", "ts": ago(1, i),
+          "ext_id": f"a{i}", "payload": {"type": t, "category": c, "keyword": "-", "seller_glid": str(i)}}
+         for i, (t, c) in enumerate([("Search", "Rubber Gumboots"), ("ENQ", "Gumboots"), ("C2C", "Gumboots"),
+                                     ("Search", "Plastic Containers"), ("Browse", "Plastic Bottle Making Machine")])]
+    b.append({"glid": "555", "role": "buyer", "source": "buylead", "channel": "marketplace", "ts": ago(0, 1),
+              "ext_id": "bl", "payload": {"title": "Rubber half-length gumboots", "suppliers_connected": 0}})
+    s = [{"glid": "666", "role": "seller", "source": "enquiry", "channel": "marketplace", "ts": ago(i + 1), "ext_id": f"e{i}",
+          "payload": {"query_id": str(i), "product": "Toor Dal", "mcat_id": "9", "buyer_city": "Pune", "read": i > 0}}
+         for i in range(3)]
+    s += [{"glid": "666", "role": "seller", "source": "buyer_call", "channel": "phone", "ts": ago(2), "ext_id": "c1",
+           "payload": {"status": "Connected", "talk_sec": 30, "mcat_id": "9"}},
+          {"glid": "666", "role": "seller", "source": "buylead", "channel": "marketplace", "ts": ago(2), "ext_id": "l1",
+           "payload": {"keyword": "Toor Dal Premium"}}]
+    with store.connect() as c:
+        store.insert_events(c, b + s)
+    needs = section_rows(build("555", "buyer", use_llm=False)["md"], "Buying Needs")
+    assert needs[0].startswith("- Rubber half-length gumboots: requirement posted")
+    assert "1 enquiry" in needs[0] and "1 seller called" in needs[0]
+    assert not any("Gumboots:" in r for r in needs[1:])                   # merged, not repeated
+    assert any("Plastic Containers" in r for r in needs) and any("Plastic Bottle" in r for r in needs)
+    demand = section_rows(build("666", "seller", use_llm=False)["md"], "Buyer Demand by Product")
+    assert demand[0].startswith("- Toor Dal: 3 enquiries (1 unread)")
+    assert "1 buyer call (1 answered)" in demand[0] and "1 BuyLead bought" in demand[0]
+    assert demand[-1].startswith("- Totals (90d)")

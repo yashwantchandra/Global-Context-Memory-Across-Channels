@@ -198,6 +198,7 @@ These organiser resources were still "to be shared" as of 8 Oct: the starter API
   - It is still uncommitted (draft v1). Commit only with the user's OK.
 - The SDK and analytics need `SARVAM_AGENTS_API_KEY` (a Voice Agents key from indus.sarvam.ai). This is separate from `SARVAM_API_KEY`, which is used for the LLM.
 - Role-play conversations are labelled synthetic (`GC_ROLEPLAY=1`, the default).
+- **Openings are rule-based (approach C, 10 Oct) and NOT in the .md:** `narrative.template_opening`, stored in `profiles.opening`, read with `sessions.opening_for(glid, role)` and sent as the agent's `opening` variable; with 0 LLM calls per event; the agent prompt says to phrase it naturally. `GC_OPENING=llm` restores LLM openings. The LLM runs only for end-of-conversation summaries.
 - **Role is never hard-coded:** use `sessions.load(glid)` or `resolve.resolve(glid)` (only one / most recent / new cold start). Every file has an `## Identity` section with name and preferred language, and the opening uses both.
 - **Requests** go to `data/requests/{catalogue_updation_requests,requirements,enquiry}/<glid>.md`, with types restricted by role (`config.REQUEST_TYPES_BY_ROLE`).
 - **Phone test calls:** MCP `place_test_call` drops custom `app_variables`. To test a phone call with context, set the agent draft's *default* variables to the GLID's file, call, then reset the defaults to cold start.

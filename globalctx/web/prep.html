@@ -12,7 +12,7 @@ const ul = rows => '<ul>' + rows.map(r => `<li>${r.replace(/</g,'&lt;')}</li>`).
 (async () => {
   const p = await (await fetch(`/api/profile/${role}/${glid}/parsed`)).json();
   const s = p.sections, m = p.meta;
-  const first = ['Open Threads','Suggested Opening','Do-Not-Ask','Engagement Signals'];
+  const first = ['Open Threads','Do-Not-Ask','Engagement Signals'];
   $=id=>document.getElementById(id);
   $('left').innerHTML = `<div class="big">Before you call</div>
     <p><span class="chip">${m.data_quality}</span><span class="chip">updated ${String(m.generated_at||'').slice(0,16).replace('T',' ')}</span>

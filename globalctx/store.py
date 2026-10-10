@@ -106,6 +106,27 @@ def events_for(glid, role, source=None, since=None):
         return out
 
 
+# sources whose lookback is longer than the event windows (state, not activity)
+LONG_LIVED = ("profile", "contact", "past_need")
+
+
+def events_in_lookback(glid, role):
+    """Only what any section can use: events inside the longest activity lookback window, plus long-lived
+    state (profile, contact, past needs). Keeps build time flat for users with years of history."""
+    from datetime import timedelta
+    longest = max(v for k, v in config.LOOKBACK_DAYS.items() if k not in LONG_LIVED)
+    since = (config.as_of() - timedelta(days=longest)).isoformat()
+    q = (f"SELECT * FROM events WHERE glid=? AND role=? AND (ts>=? OR source IN ({','.join('?' * len(LONG_LIVED))}))"
+         " ORDER BY ts DESC")
+    with connect() as c:
+        out = []
+        for r in c.execute(q, (str(glid), role, since, *LONG_LIVED)):
+            d = dict(r)
+            d["payload"] = json.loads(d["payload"])
+            out.append(d)
+        return out
+
+
 def latest_event(glid, role):
     with connect() as c:
         r = c.execute(

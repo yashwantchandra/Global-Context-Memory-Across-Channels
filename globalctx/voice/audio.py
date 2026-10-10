@@ -1,8 +1,8 @@
 """Half-duplex audio for laptop calls without earphones.
 
-On laptop speakers the mic hears Vani's own voice, the agent takes it as the caller talking and replies to
-itself (echo loop). The gate sends silence instead of mic audio while Vani's voice is playing, plus a short
-tail, so only the caller's speech reaches Sarvam. Trade-off: the caller cannot interrupt Vani mid-sentence.
+On laptop speakers the mic hears Mira's own voice, the agent takes it as the caller talking and replies to
+itself (echo loop). The gate sends silence instead of mic audio while Mira's voice is playing, plus a short
+tail, so only the caller's speech reaches Sarvam. Trade-off: the caller cannot interrupt Mira mid-sentence.
 With earphones, run without the gate (--no-gate) to keep barge-in.
 """
 import time

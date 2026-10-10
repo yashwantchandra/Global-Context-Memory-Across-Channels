@@ -107,7 +107,7 @@ async def run(glid, role, lines, version=1):
     await agent.stop()
     for who, text in sessions.merge_partials(st["transcripts"]):
         sessions.add_turn(sid, who, text)
-        print(f"{'Caller' if who == 'user' else 'Vani  '}: {text}")
+        print(f"{'Caller' if who == 'user' else 'Mira  '}: {text}")
     summary, fast = sessions.end(sid, glid, role, "voice")
     if summary:
         refresh.rebuild_now(glid, fast["role"], use_llm=True)  # finish the LLM opening before the CLI exits

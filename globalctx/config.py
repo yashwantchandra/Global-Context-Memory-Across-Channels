@@ -57,37 +57,32 @@ SECTION_CAPS = {
     "seller": {
         "Identity": 1,
         "Snapshot": 2,
-        "Leads & Enquiries": 3,
-        "Responses & Calls": 3,
+        "Buyer Demand by Product": 4,   # top 3 products + totals
+        "Responses & Calls": 2,
         "Past Conversations": 3,
         "Open Threads": 3,
         "Engagement Signals": 2,
         "Do-Not-Ask": 1,
-        "Suggested Opening": 1,
     },
     "buyer": {
         "Identity": 1,
         "Snapshot": 2,
-        "Enquiries & Status": 3,
-        "Categories Searched": 1,
-        "Sellers Contacted": 1,
+        "Buying Needs": 6,              # requirement + details + 2 more needs + earlier needs + totals
         "KYC": 1,
         "Past Conversations": 3,
         "Open Threads": 3,
         "Engagement Signals": 1,
         "Do-Not-Ask": 1,
-        "Suggested Opening": 1,
     },
 }
 
 # Trimmed first when the file is over budget; sections not listed are never trimmed
 TRIM_ORDER = [
     "Engagement Signals",
-    "Categories Searched",
     "Past Conversations",
     "Responses & Calls",
-    "Leads & Enquiries",
-    "Enquiries & Status",
+    "Buyer Demand by Product",
+    "Buying Needs",
 ]
 
 # Requests raised on our channels -> one md per GLID per folder (data/requests/<folder>/<glid>.md)
@@ -112,6 +107,10 @@ SARVAM_APP_ID = os.environ.get("SARVAM_APP_ID", "Conversatio-c49cd61c-ee22")  # 
 # Conversations in this build are teammates role-playing real GLIDs, so they are labelled synthetic.
 # Set GC_ROLEPLAY=0 for real customer conversations.
 ROLEPLAY = os.environ.get("GC_ROLEPLAY", "1") == "1"
+
+# Openings come from rules (no LLM); the voice agent rephrases them naturally on the call.
+# GC_OPENING=llm switches back to the LLM-written opening (costs one LLM call per changed GLID).
+OPENING_MODE = os.environ.get("GC_OPENING", "template")
 
 # Set GC_NO_LLM=1 to build files without calling Sarvam (template opening only)
 NO_LLM = os.environ.get("GC_NO_LLM") == "1"

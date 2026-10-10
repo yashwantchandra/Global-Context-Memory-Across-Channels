@@ -1,9 +1,9 @@
 ---
 glid: BUYER_3
 role: buyer
-generated_at: 2026-10-09T17:01:31.887
+generated_at: 2026-10-10T13:27:53.308
 last_event_at: 2026-10-01T10:19:56
-freshness_ms: 6862439
+freshness_ms: 77732567
 data_quality: ok
 synthetic: false
 sources: [buyer_activity, buyleads, profile, sellers, whatsapp]
@@ -19,16 +19,11 @@ evicted: {past_conversations: 4}
 - Gharaunda, India
 - on IndiaMART 0 Y 0 M
 
-## Enquiries & Status
-- 9 enquiries in last 30d
-- Latest enquiry 29 Sep: Concrete Road Bollards
-- Buy requirement posted 30 Sep: Concrete Cylindrical Bollards
-
-## Categories Searched
-- Ductile Iron Pipe (5) · Road Bollard (2) · RCC Precast Bollard (1)
-
-## Sellers Contacted
-- 8 sellers contacted (30d) · recent: [Name 6], [Name 4], [Name 2]
+## Buying Needs
+- Concrete Cylindrical Bollards: requirement posted 30 Sep · 2 enquiries · 1 seller called
+- RCC Precast Bollard: 1 seller called · last 29 Sep
+- Round Ductile Cast Iron Pipe: requirement posted · 5 enquiries · 6 sellers called · last 26 Sep
+- Totals (30d): 9 enquiries · 8 sellers contacted
 
 ## KYC
 - Mobile Verified · email not verified · GST not available
@@ -45,7 +40,4 @@ evicted: {past_conversations: 4}
 - 18 actions in 30d: C2C 9, ENQ 8, BL 1
 
 ## Do-Not-Ask
-- city: Gharaunda; requirement: Concrete Cylindrical Bollards; interested in: Ductile Iron Pipe, Road Bollard, RCC Precast Bollard; sellers already contacted; name; preferred language: Hinglish
-
-## Suggested Opening
-"Namaste [Name 7] ji! Main IndiaMART se Vani bol rahi hoon, aapki concrete cylindrical bollards ki enquiry ke baare mein baat karne ke liye."
+- city: Gharaunda; requirement: Concrete Cylindrical Bollards; interested in: Round Ductile Cast Iron Pipe, RCC Precast Bollard; name; preferred language: Hinglish

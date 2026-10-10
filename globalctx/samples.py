@@ -13,6 +13,20 @@ from globalctx.build.render import parse
 OUT = config.ROOT / "samples"
 
 
+def _seller_names(texts):
+    """Company names that WhatsApp templates mention: 'You just spoke with X', 'X (City) responded', 'X tried to reach you'."""
+    pats = [r"spoke with (.+?)(?: 📞| Was|\n|$)",
+            r"(?:^|, )([A-Z][\w&.'() -]{2,60}?) \([A-Za-z .]+\)(?: \(also deals in [^)]*\))? responded",
+            r"^Hi! (.+?) tried to reach you"]
+    names = []
+    for t in texts:
+        for pat in pats:
+            m = re.search(pat, t)
+            if m:
+                names.append(m.group(1).strip(" *"))
+    return names
+
+
 def names_for(glid, role):
     """Every person/company name the file could mention for this GLID."""
     names = set()
@@ -22,7 +36,6 @@ def names_for(glid, role):
             if p.get(k):
                 names.add(str(p[k]).strip())
         if role == "buyer" and e["source"] == "whatsapp_bot":
-            from globalctx.build.facts import _seller_names
             names.update(_seller_names([p.get("text", "")]))
     return {n for n in names if len(n) > 2}
 

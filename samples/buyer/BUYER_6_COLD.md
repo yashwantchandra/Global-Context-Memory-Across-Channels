@@ -1,7 +1,7 @@
 ---
 glid: BUYER_6_COLD
 role: buyer
-generated_at: 2026-10-09T17:01:31.916
+generated_at: 2026-10-10T13:27:53.319
 last_event_at: null
 freshness_ms: null
 data_quality: cold_start
@@ -18,13 +18,7 @@ evicted: {}
 ## Snapshot
 - No profile data (cold start)
 
-## Enquiries & Status
-- No data in lookback window
-
-## Categories Searched
-- No data in lookback window
-
-## Sellers Contacted
+## Buying Needs
 - No data in lookback window
 
 ## KYC
@@ -41,6 +35,3 @@ evicted: {}
 
 ## Do-Not-Ask
 - preferred language: Hinglish
-
-## Suggested Opening
-"Namaste! Main IndiaMART se Vani bol rahi hoon. Aap kuch khareedna chahte hain, ya apne business ke liye madad chahiye?"

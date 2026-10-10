@@ -1,9 +1,9 @@
 ---
 glid: SELLER_5
 role: seller
-generated_at: 2026-10-09T17:45:16.741
+generated_at: 2026-10-10T13:27:53.293
 last_event_at: 2026-10-09T17:45:15.959
-freshness_ms: 781
+freshness_ms: 68246038
 data_quality: ok
 synthetic: true
 sources: [buyer_calls, buyleads, enquiries, exec_calls, profile, vani_calls, whatsapp]
@@ -13,19 +13,19 @@ evicted: {}
 # Seller context · GLID SELLER_5
 
 ## Identity
-- Business: [Name 1] · Preferred language: English (own messages)
+- Business: [Name 1] · Contact: not known yet (ask once) · Preferred language: Gujarati (phone calls)
 
 ## Snapshot
 - [Name 1] · Vadodara, Gujarat · Proprietorship · turnover 0 - 40 L
 - Categories: ABB PLC, Aerosol Fire Extinguisher, Cable Connectors · free listing · GST verified · mobile verified
 
-## Leads & Enquiries
-- Enquiries (90d): 5 received, 4 opened, replied on 1 (30d) · top: Heat Aerosol Fire Extinguishing Device, thermal overlo…
-- Latest enquiry 09 Oct: HDPE Pipe 2 inch · a buyer from Lucknow · UNREAD (synthetic)
-- Buy-leads bought (45d): 3 ·
+## Buyer Demand by Product
+- Heat Aerosol Fire Extinguishing Device: 2 enquiries, latest 30 Sep from Vadodara
+- thermal overload relays: 2 enquiries, latest 22 Aug from Vadodara
+- HDPE Pipe 2 inch: 1 enquiry (1 unread), latest 09 Oct from Lucknow (synthetic)
+- Totals (90d): 5 enquiries, 4 opened, 1 replied · 3 buyer calls, 66% answered, avg 11s · 3 BuyLeads (45d)
 
 ## Responses & Calls
-- Buyer calls (90d): 3 received, 2 connected (66%), avg talk 11s
 - VANI bot calls (90d): 1 answered · Not Interested 1 · last: Not Interested (11 Sep)
 - Executive calls (60d): 1, 1 answered · last 30 Sep Answered
 
@@ -39,7 +39,4 @@ evicted: {}
 - pickup ratio 10% (90d) · WhatsApp read rate 88% (30d)
 
 ## Do-Not-Ask
-- city: Vadodara, Gujarat; categories: ABB PLC, Aerosol Fire Extinguisher, Cable Connectors; business type; GST status; name; preferred language: English
-
-## Suggested Opening
-"Hello [Name 1] ji, this is VANI from IndiaMART. I am calling regarding your recent enquiry for HDPE Pipe 2 inch."
+- city: Vadodara, Gujarat; categories: ABB PLC, Aerosol Fire Extinguisher, Cable Connectors; business type; GST status; business name; preferred language: Gujarati

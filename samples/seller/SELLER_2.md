@@ -1,9 +1,9 @@
 ---
 glid: SELLER_2
 role: seller
-generated_at: 2026-10-09T17:01:29.796
+generated_at: 2026-10-10T13:27:53.282
 last_event_at: 2026-10-09T15:13:23.579
-freshness_ms: 6486216
+freshness_ms: 77358406
 data_quality: ok
 synthetic: true
 sources: [buyer_calls, buyleads, enquiries, exec_calls, profile, sessions, vani_calls]
@@ -13,19 +13,19 @@ evicted: {}
 # Seller context · GLID SELLER_2
 
 ## Identity
-- Business: [Name 1] · Preferred language: Hinglish (last conversation)
+- Business: [Name 1] · Contact: not known yet (ask once) · Preferred language: Hinglish (last conversation)
 
 ## Snapshot
 - [Name 1] · Bhubaneswar, Odisha · Proprietorship · turnover 0 - 40 L
 - Categories: PVC Ceiling Panel, PVC Mat, PVC Wall Panel · free listing · GST verified · mobile verified
 
-## Leads & Enquiries
-- Enquiries (90d): 19 received, 18 opened, replied on 5 (30d) · top: SM 005 PVC Stamping Wall Ceiling Panel, Artificial G…
-- Latest enquiry 09 Oct: HDPE Pipe 2 inch · a buyer from Lucknow · UNREAD (synthetic)
-- Buy-leads bought (45d): 57 · Fluted Panel
+## Buyer Demand by Product
+- SM 005 PVC Stamping Wall Ceiling Panel: 4 enquiries, latest 30 Sep from Bhubaneswar
+- Thermocol Beans: 2 enquiries, latest 27 Aug from Unnao · 2 buyer calls (2 answered)
+- Artificial Grass Mat: 2 enquiries, latest 24 Sep from Dhenkanal
+- Totals (90d): 19 enquiries, 18 opened, 5 replied · 9 buyer calls, 88% answered, avg 76s · 56 BuyLeads (45d)
 
 ## Responses & Calls
-- Buyer calls (90d): 9 received, 8 connected (88%), avg talk 76s
 - VANI bot calls (90d): 1 answered · Not Interested 1 · last: Not Interested (23 Aug)
 - Executive calls (60d): 26, 22 answered · last 14 Sep Answered
 
@@ -34,7 +34,7 @@ evicted: {}
 - 23 Aug · VANI call: The agent from IndiaMART called the lead to discuss paid services and schedule a meeting with a sal…
 
 ## Open Threads
-- Callback promised: Tomorrow at 5 PM (said on voice call, 09 Oct)
+- Callback promised: 10 Oct, 5 PM (said on voice call, 09 Oct)
 - Discussion about the 300 pieces PVC ceiling panel bulk order at 85 INR per piece (from voice call, 09 Oct)
 - 1 unread enquiry (30d), latest: HDPE Pipe 2 inch (09 Oct) (synthetic)
 
@@ -42,7 +42,4 @@ evicted: {}
 - pickup ratio 12% (90d) · WhatsApp read rate 0% (30d)
 
 ## Do-Not-Ask
-- city: Bhubaneswar, Odisha; categories: PVC Ceiling Panel, PVC Mat, PVC Wall Panel; business type; GST status; callback: Tomorrow at 5 PM; language: Hinglish; name; preferred language: Hinglish
-
-## Suggested Opening
-"Namaste [Name 1] ji! Main IndiaMART se Vani bol rahi hoon, aapka bulk order discuss karne ke liye."
+- city: Bhubaneswar, Odisha; categories: PVC Ceiling Panel, PVC Mat, PVC Wall Panel; business type; GST status; callback: 10 Oct, 5 PM; business name; preferred language: Hinglish

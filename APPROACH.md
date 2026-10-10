@@ -1,7 +1,7 @@
 # Approach note: PS02 Global Context
 
 ## Problem
-Every call or chat with Vani starts cold, so users repeat themselves. The data to fix this already exists across IndiaMART systems; what's missing is a compact, always-fresh view per user that any channel or team can load instantly.
+Every call or chat with VANI (IndiaMART's voice bot) starts cold, so users repeat themselves. The data to fix this already exists across IndiaMART systems; what's missing is a compact, always-fresh view per user that any channel or team can load instantly.
 
 ## Workflow
 ```
@@ -45,11 +45,21 @@ Buyer data comes from a log export of the internal `globalcontext/getContext` AP
 ## File design and size budget
 - **One file per GLID per role**, never a shared file. The bot then only ever sees the person it's talking to.
 - **Fixed sections.**
-  - Seller (8): Snapshot, Leads & Enquiries, Responses & Calls, Past Conversations, Open Threads, Engagement Signals, Do-Not-Ask, Suggested Opening.
-  - Buyer (10): adds Categories Searched, Sellers Contacted and KYC.
+  - Seller (8): Identity, Snapshot, Buyer Demand by Product, Responses & Calls, Past Conversations, Open Threads, Engagement Signals, Do-Not-Ask.
+  - Buyer (9): Identity, Snapshot, Buying Needs, KYC, Past Conversations, Open Threads, Engagement Signals, Do-Not-Ask.
+- **Grouped by need, not by source.** One row per product holds everything about it, so the bot reads one line per need:
+  - Buyer "Buying Needs": the posted requirement first (with its details row), then other needs; each row combines
+    searches, enquiries and sellers called for that product; then earlier needs (12 months) and a totals row.
+    Seller names stay out of the file (counts only).
+  - Seller "Buyer Demand by Product": per product, enquiries (unread, latest city), buyer calls (answered) and BuyLeads
+    bought; then a totals row. Buyer calls carry only an MCAT id, so they're named after the product most enquired
+    under that MCAT. VANI and executive calls stay in Responses & Calls.
+  - Two labels are the same need when they share 2 specific words, or 1 if a label has only one word
+    ("Gumboots" ~ "Rubber half-length gumboots", but not "Plastic Containers" ~ "Plastic Bottle Making Machine").
+  - Stats in a row are dropped least-important first (searches, then dates) so a row always fits 120 characters.
 - **Row caps:**
-  - Seller: 2 / 3 / 3 / 3 / 3 / 2 / 1 / 1 (18 rows).
-  - Buyer: 17 rows.
+  - Seller: 1 / 2 / 4 / 2 / 3 / 3 / 2 / 1 (18 rows).
+  - Buyer: 1 / 2 / 6 / 1 / 3 / 3 / 1 / 1 (18 rows).
   - At most 120 characters per row.
 - **Budget:** at most 2,500 characters (about 700 tokens; typical files are 1,500–2,100).
   - It leaves ample room in the 32K-context conversational model.
@@ -61,7 +71,7 @@ Buyer data comes from a log export of the internal `globalcontext/getContext` AP
   2. Dedupe and supersession.
   3. State-based closure of open threads: a later conversation closes a callback; a callback more than 48 h old becomes history; reading an enquiry closes it.
   4. Rank and cap per section. Our latest session is pinned, and Past Conversations take at most 2 rows per channel.
-  5. A global trim in a fixed priority order. Snapshot, Open Threads, Do-Not-Ask and the Opening are never trimmed.
+  5. A global trim in a fixed priority order. Identity, Snapshot, Open Threads and Do-Not-Ask are never trimmed.
 
   The front-matter records `evicted:` counts.
 - **Do-Not-Ask is derived only from facts that survived selection**, so the bot never claims something that isn't in the file.
@@ -85,11 +95,23 @@ Buyer data comes from a log export of the internal `globalcontext/getContext` AP
   - Complaints are not requests, and request types are restricted by role.
 - **Storage.** Each request is stored as an event and written to `requests/<folder>/<glid>.md`, newest first with a pending or done status. The pending ones also appear as Open Threads in the profile, so the next call follows up.
 
-## LLM use
-- `sarvam-105b` writes the Suggested Opening (JSON schema, Hinglish) and summarises our sessions. The summary extracts requirement, quantity, absolute callback time and open threads.
-- `sarvam-105b-conversations` runs the chat channel.
-- The hosted agent handles voice: Saaras for speech-to-text, Bulbul for text-to-speech.
-- Facts never come from the LLM. If Sarvam fails, templates take over, so a rebuild never fails.
+## LLM use (approach C: LLM work only where a conversation happens)
+- **0 LLM calls per event.** Facts, counts, threads, identity, language and the **opening line** are all built by rules in about 5–15 ms.
+  - The opening is **not part of the `.md`**, which holds facts only. It is stored beside the file (`profiles.opening`) and passed to the agent as the `opening` variable.
+  - The opening follows a fixed priority:
+    1. callback asked for
+    2. seller's own pending requests
+    3. last conversation's topic
+    4. buyer's open requirement, with an apology when no supplier has connected yet
+    5. leads from buyers / categories
+    6. name only
+    7. generic
+  - It is written in Hinglish, or in English for English speakers.
+- **The voice agent phrases it.** Its prompt tells it to convey the opening "in its own natural words, in the user's preferred language, keeping exactly its facts". It is already an LLM running the call, so writing the line beforehand with a second LLM would be paying twice.
+- **About 1 LLM call per conversation:** `sarvam-105b` turns the transcript into structured fields (summary, requirement, quantity, callback, next step, requests, role, contact name, language).
+  - Next step: use the agent's own post-call output variables instead, which takes this to about 0.
+- `sarvam-105b-conversations` runs the web chat.
+- `GC_OPENING=llm` switches back to LLM-written openings. Facts never come from the LLM.
 
 ## Integration logic
 Everything runs locally; there are no inbound hooks.

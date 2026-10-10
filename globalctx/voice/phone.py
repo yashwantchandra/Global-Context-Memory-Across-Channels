@@ -35,7 +35,7 @@ def variables_for(glid, role=None):
     """Agent variables for a call; the role is resolved from the GLID's files unless given."""
     role, md, _ = sessions.load(str(glid), role)
     check, check_en = sessions.identity_check(md)
-    return {"context": md, "role": role, "glid": str(glid), "opening": sessions._opening_from(md),
+    return {"context": md, "role": role, "glid": str(glid), "opening": sessions.opening_for(str(glid), role),
             "identity_check": check, "identity_check_en": check_en}
 
 
@@ -104,7 +104,7 @@ def ingest_interaction(it):
         turns = []
     summary = narrative.summarise_session(role, turns) if turns else {}
     # the agent's own post-call variables fill any gaps
-    summary = {**{"summary": v.get("call_summary") or "call with Vani", "requirement": v.get("requirement") or None,
+    summary = {**{"summary": v.get("call_summary") or "call with Mira", "requirement": v.get("requirement") or None,
                   "quantity": v.get("quantity") or None, "callback": v.get("callback_time") or None,
                   "next_step": v.get("next_step") or None, "open_threads": [], "requests": []},
                **{k: val for k, val in summary.items() if val not in (None, "", [])},

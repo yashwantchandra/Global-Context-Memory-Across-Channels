@@ -1,9 +1,9 @@
 ---
 glid: BUYER_1
 role: buyer
-generated_at: 2026-10-09T17:01:30.836
+generated_at: 2026-10-10T13:27:53.313
 last_event_at: 2026-09-30T16:47:32
-freshness_ms: 6861449
+freshness_ms: 77732633
 data_quality: ok
 synthetic: false
 sources: [buyer_activity, buyleads, profile, sellers, whatsapp]
@@ -19,16 +19,11 @@ evicted: {}
 - Patna, India · Free buyer
 - on IndiaMART 9 Y 3 M · rating 5 (2)
 
-## Enquiries & Status
-- 12 enquiries in last 30d
-- Latest enquiry 30 Sep: Toshak Bed Mattress 3&times;6 (Cotton Mattresses)
-- Buy requirement posted 30 Sep: Cotton Mattress
-
-## Categories Searched
-- Cotton Mattresses (6) · Cosmetic and Pharmaceutical Packaging Tube (5) · Wide Mouth Bottle (4)
-
-## Sellers Contacted
-- 4 sellers contacted (30d) · recent: [Name 1]
+## Buying Needs
+- Cotton Mattress: requirement posted 30 Sep · 3 enquiries · 2 sellers called
+- Plastic Containers: requirement posted · last 28 Sep
+- Air Compressor: searched 2x · last 28 Sep
+- Totals (30d): 12 enquiries · 4 sellers contacted
 
 ## KYC
 - Mobile Verified · email Verified · GST Verified
@@ -43,7 +38,4 @@ evicted: {}
 - 54 actions in 30d: Browse 35, ENQ 7, BL 5, C2C 4
 
 ## Do-Not-Ask
-- city: Patna; requirement: Cotton Mattress; interested in: Cotton Mattresses, Cosmetic and Pharmaceutical Packaging Tube, Wide Mouth Bottle; sellers already contacted; name; preferred language: Hinglish
-
-## Suggested Opening
-"Namaste [Name 2] ji! Main IndiaMART se Vani bol rahi hoon. Aapne Toshak Bed Mattress 3x6 ki enquiry ki thi, usi baare mein baat karne ke liye call kiya hai."
+- city: Patna; requirement: Cotton Mattress; interested in: Air Compressor, Plastic Containers; name; preferred language: Hinglish

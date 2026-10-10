@@ -86,7 +86,9 @@ def _session_rows(f, sessions):
         text = f"{d(s['ts'])} · {label} (our bot): {p.get('summary', '')}"
         past.append(Row(scrub(text), score=recency(s["ts"]) + 1000 * (i == 0), ts=s["ts"],
                         channel=s["channel"], pinned=(i == 0), synthetic=bool(s["synthetic"])))
-        if i == 0:
+        # threads and known facts come from the latest conversation that actually happened (not a voicemail)
+        real = [x for x in sessions if x["payload"].get("disposition") != "no_conversation"]
+        if real and s is real[0]:
             later = s["ts"]
             for t in p.get("open_threads") or []:
                 threads.append(Row(scrub(f"{t} (from {label.lower()}, {d(s['ts'])})"), score=300, ts=later))
@@ -96,7 +98,7 @@ def _session_rows(f, sessions):
             if p.get("callback"):
                 threads.append(Row(scrub(f"Callback promised: {p['callback']} (said on {label.lower()}, {d(s['ts'])})"),
                                    score=400, ts=later))
-            for k in ("requirement", "quantity", "callback", "language"):
+            for k in ("requirement", "quantity", "callback"):  # language comes from Identity
                 if p.get(k):
                     f.known.append((f"{k}: {p[k]}", "Past Conversations"))
     return past, threads
@@ -121,7 +123,12 @@ def _identity_and_requests(f, S, events, p, threads):
     elif f.role == "seller":
         who += " · Contact: not known yet (ask once)"
     S["Identity"].append(Row(f"{who} · Preferred language: {lang} ({src})"))
-    if name or contact:
+    if f.role == "seller":
+        if name:
+            f.known.append(("business name", "Identity"))
+        if contact:
+            f.known.append(("contact name", "Identity"))
+    elif name or contact:
         f.known.append(("name", "Identity"))
     f.contact = contact
     f.known.append((f"preferred language: {lang}", "Identity"))
@@ -136,7 +143,7 @@ def _identity_and_requests(f, S, events, p, threads):
 # ---------------------------------------------------------------- seller
 
 def seller_facts(glid) -> Facts:
-    events = store.events_for(glid, "seller")
+    events = store.events_in_lookback(glid, "seller")
     f = Facts(str(glid), "seller")
     profiles = [e for e in events if e["source"] == "profile"]
     p = profiles[0]["payload"] if profiles else {}
@@ -164,34 +171,69 @@ def seller_facts(glid) -> Facts:
             f.known.append(("business type", "Snapshot"))
         f.known.append(("GST status", "Snapshot"))
 
-    # Leads & Enquiries (fixed rows: counts, latest, buy-leads)
+    # Buyer Demand by Product: enquiries, buyer calls and BuyLeads grouped per product, then a totals row
     enq = in_window(events, "enquiry")
     msgs = in_window(events, "enquiry_message")
     bls = in_window(events, "buylead")
+    calls = in_window(events, "buyer_call")
+    for src, rows in (("enquiries", enq), ("buyleads", bls), ("buyer_calls", calls)):
+        if rows:
+            f.sources.add(src)
+    # buyer calls only carry an mcat id: name it after the product most enquired under that mcat
+    per_mcat = defaultdict(Counter)
+    for e in enq:
+        if clean(e["payload"].get("mcat_id")) and clean(e["payload"].get("product")):
+            per_mcat[e["payload"]["mcat_id"]][e["payload"]["product"]] += 1
+    mcat_label = {m: c.most_common(1)[0][0] for m, c in per_mcat.items()}
+    groups = {}
+
+    def group(label):
+        return groups.setdefault(label, {"enq": [], "calls": [], "bls": []})
+
+    for e in enq:
+        ep = e["payload"]
+        label = mcat_label.get(ep.get("mcat_id")) or _label(ep.get("product")) or _label(ep.get("keyword"))
+        if label:
+            group(label)["enq"].append(e)
+    for c in calls:
+        if c["payload"].get("mcat_id") in mcat_label:  # unmatched calls are only in the totals
+            group(mcat_label[c["payload"]["mcat_id"]])["calls"].append(c)
+    for b in bls:
+        kw = _label(b["payload"].get("keyword"))
+        if kw:
+            group(next((g for g in groups if _overlap(g, kw)), kw))["bls"].append(b)
+    ranked = sorted(groups.items(), key=lambda kv: (len(kv[1]["enq"]) + len(kv[1]["calls"]) + len(kv[1]["bls"]),
+                                                    max(x["ts"] for x in kv[1]["enq"] + kv[1]["calls"] + kv[1]["bls"])),
+                    reverse=True)
+    for label, g in ranked[:3]:
+        parts = []
+        if g["enq"]:
+            e0, unread_n = g["enq"][0], sum(1 for e in g["enq"] if not e["payload"].get("read"))
+            parts.append(f"{len(g['enq'])} enquir{'y' if len(g['enq']) == 1 else 'ies'}"
+                         + (f" ({unread_n} unread)" if unread_n else "")
+                         + f", latest {d(e0['ts'])} from {e0['payload'].get('buyer_city') or 'India'}")
+        if g["calls"]:
+            ans = sum(1 for c in g["calls"] if c["payload"].get("status") == "Connected")
+            parts.append(f"{len(g['calls'])} buyer call{'s' * (len(g['calls']) > 1)} ({ans} answered)")
+        if g["bls"]:
+            parts.append(f"{len(g['bls'])} BuyLead{'s' * (len(g['bls']) > 1)} bought")
+        S["Buyer Demand by Product"].append(Row(f"{label[:45]}: " + " · ".join(parts),
+                                                synthetic=any(x["synthetic"] for x in g["enq"][:1])))
+    totals = []
     if enq:
-        f.sources.add("enquiries")
         opened = sum(1 for e in enq if e["payload"].get("read"))
         replied = len({m["payload"]["query_id"] for m in msgs if m["payload"].get("from") == "seller"})
-        prod = Counter(e["payload"].get("product") for e in enq)
-        S["Leads & Enquiries"].append(Row(f"Enquiries (90d): {len(enq)} received, {opened} opened, "
-                                          f"replied on {replied} (30d) · top: {', '.join(top(prod, 2))}"))
-        e0 = enq[0]["payload"]
-        S["Leads & Enquiries"].append(Row(
-            f"Latest enquiry {d(enq[0]['ts'])}: {e0.get('product')} · a buyer from {e0.get('buyer_city') or 'India'}"
-            f" · {'opened' if e0.get('read') else 'UNREAD'}", synthetic=bool(enq[0]["synthetic"])))
-    if bls:
-        f.sources.add("buyleads")
-        kw = Counter(e["payload"].get("keyword") for e in bls)
-        S["Leads & Enquiries"].append(Row(f"Buy-leads bought (45d): {len(bls)} · {', '.join(top(kw, 3))}"))
-
-    # Responses & Calls (fixed rows: buyer calls, VANI, exec)
-    calls = in_window(events, "buyer_call")
+        totals.append(f"{len(enq)} enquiries, {opened} opened, {replied} replied")
     if calls:
-        f.sources.add("buyer_calls")
         conn = [c for c in calls if c["payload"].get("status") == "Connected"]
         avg = sum(c["payload"].get("talk_sec", 0) for c in conn) / len(conn) if conn else 0
-        S["Responses & Calls"].append(Row(f"Buyer calls (90d): {len(calls)} received, {len(conn)} connected "
-                                          f"({100 * len(conn) // len(calls)}%), avg talk {int(avg)}s"))
+        totals.append(f"{len(calls)} buyer calls, {100 * len(conn) // len(calls)}% answered, avg {int(avg)}s")
+    if bls:
+        totals.append(f"{len(bls)} BuyLeads (45d)")
+    if totals:
+        S["Buyer Demand by Product"].append(Row("Totals (90d): " + " · ".join(totals), pinned=True))
+
+    # Responses & Calls (fixed rows: VANI, exec)
     vani = in_window(events, "vani_call")
     if vani:
         f.sources.add("vani_calls")
@@ -291,7 +333,8 @@ def seller_facts(glid) -> Facts:
         # enquiries are FROM buyers TO this seller (leads he can sell to), never his own needs
         "latest_enquiry_from_a_buyer": enq[0]["payload"].get("product") if enq else None,
         "unread_enquiries_from_buyers": len(unread),
-        "pending_requests_raised_by_seller": [r.text for r in threads if r.text.startswith("Pending")][:2],
+        "pending_requests_raised_by_seller": [r.text for r in threads if r.text.startswith(
+            ("Pending catalogue update:", "Pending price update:"))][:2],
         "last_vani": vani[0]["payload"].get("disposition") if vani else None,
     }
     return f
@@ -299,19 +342,31 @@ def seller_facts(glid) -> Facts:
 
 # ---------------------------------------------------------------- buyer
 
-def _seller_names(texts):
-    """Company names that WhatsApp templates mention: 'You just spoke with X', 'X (City) responded', 'X tried to reach you'."""
+GENERIC = {"machine", "machines", "product", "products", "price", "with", "for", "and", "best", "quality", "half", "length"}
+
+
+def _singular(w):
+    return w[:-2] if w.endswith("sses") else w[:-1] if w.endswith("s") and not w.endswith("ss") else w
+
+
+def _words(text):
+    return {_singular(w) for w in "".join(ch if ch.isalnum() else " " for ch in text.lower()).split()
+            if len(w) >= 4 and w not in GENERIC}
+
+
+def _overlap(a, b):
+    """Same need when the labels share 2 specific words, or 1 if a label has only one
+    ('Gumboots' ~ 'Rubber gumboots', 'Blow Molding Machines' ~ '3 Phase Blow Molding Machine', but not
+    'Plastic Containers' ~ 'Plastic Bottle Making Machine')."""
+    wa, wb = _words(a), _words(b)
+    return bool(wa and wb) and len(wa & wb) >= min(2, len(wa), len(wb))
+
+
+def _label(text):
+    """Search keywords can be long listing titles: keep the part before the first comma."""
     import re
-    pats = [r"spoke with (.+?)(?: 📞| Was|\n|$)",
-            r"(?:^|, )([A-Z][\w&.'() -]{2,60}?) \([A-Za-z .]+\)(?: \(also deals in [^)]*\))? responded",
-            r"^Hi! (.+?) tried to reach you"]
-    names = []
-    for t in texts:
-        for pat in pats:
-            m = re.search(pat, t)
-            if m:
-                names.append(m.group(1).strip(" *"))
-    return names
+    from urllib.parse import unquote_plus
+    return re.sub(r"\s*\([^)]*\)", "", unquote_plus(clean(text)).split(",")[0]).strip(" :-")[:45]
 
 
 def clean(v):
@@ -326,7 +381,7 @@ def strip_greeting(text):
 
 
 def buyer_facts(glid) -> Facts:
-    events = store.events_for(glid, "buyer")
+    events = store.events_in_lookback(glid, "buyer")
     f = Facts(str(glid), "buyer")
     profiles = [e for e in events if e["source"] == "profile"]
     p = profiles[0]["payload"] if profiles else {}
@@ -351,69 +406,103 @@ def buyer_facts(glid) -> Facts:
         f.sources.add("buyer_activity")
     enq_acts = [a for a in acts if a["payload"].get("type") in ("ENQ", "BL")]
 
-    # Enquiries & Status (fixed: counts, latest, last buy-lead)
-    # Activity log is fresher than the snapshot counters; show the counter only when it adds information
-    enq90 = int(num(p.get("enq_90d"))) if p else 0
-    if enq_acts or enq90:
-        S["Enquiries & Status"].append(Row(f"{len(enq_acts)} enquiries in last 30d"
-                                           + (f" · {enq90} in 90d" if enq90 > len(enq_acts) else "")))
-    if enq_acts:
-        a = enq_acts[0]["payload"]
-        S["Enquiries & Status"].append(Row(f"Latest enquiry {d(enq_acts[0]['ts'])}: {clean(a.get('keyword')) or clean(a.get('category'))}"
-                                           + (f" ({clean(a.get('category'))})" if clean(a.get('category')) else ""), synthetic=bool(enq_acts[0]["synthetic"])))
-    elif p.get("last_enquiry_title"):
-        S["Enquiries & Status"].append(Row(f"Last enquiry: {p['last_enquiry_title']}"))
+    # Buying Needs: one row per product/category (searches, enquiries, sellers called, requirement), then totals
+    groups = {}
+    for a in acts:  # newest first, so each group's first item is its latest action
+        ap = a["payload"]
+        label = _label(ap.get("category")) or _label(ap.get("keyword"))
+        if label and ap.get("type") in ("Search", "Browse", "ENQ", "C2C", "BL"):
+            key = next((g for g in groups if g.lower() == label.lower() or _overlap(g, label)), label)
+            groups.setdefault(key, []).append(a)
     leads = in_window(events, "buylead")
+    req_label = upd = None
+    # requirements the buyer stated on our channels, newest first
+    said = [e for e in in_window(events, "session") if e["payload"].get("kind") == "summary"
+            and (e["payload"].get("quantity") or e["payload"].get("requirement"))]
     if leads:
         f.sources.add("buyleads")
+        req_label = _label(leads[0]["payload"].get("title")) or "Requirement"
+        merged = [x for g in [g for g in groups if _overlap(g, req_label)] for x in groups.pop(g)]
+        groups[req_label] = sorted(merged, key=lambda x: x["ts"], reverse=True)
+
+    def need_row(label, items, head=(), skip_bl=False):
+        """Stats are dropped least-important first (searches, then last date) so the row fits in MAX_ROW_CHARS."""
+        types = Counter(x["payload"].get("type") for x in items)
+        called = {x["payload"].get("seller_glid") for x in items if x["payload"].get("type") == "C2C"
+                  and x["payload"].get("seller_glid") not in (None, "0")}
+        parts = [(9, h) for h in head]  # (priority, text): higher survives longer
+        if types.get("BL") and not skip_bl:
+            parts.append((8, "requirement posted" + (f" {types['BL']}x" if types["BL"] > 1 else "")))
+        if types.get("ENQ"):
+            parts.append((7, f"{types['ENQ']} enquir{'y' if types['ENQ'] == 1 else 'ies'}"))
+        if called:
+            parts.append((6, f"{len(called)} seller{'s' * (len(called) > 1)} called"))
+        if types.get("Search") or types.get("Browse"):
+            parts.append((4, f"searched {types['Search'] + types['Browse']}x"))
+        if items and not head:
+            parts.append((5, f"last {d(items[0]['ts'])}"))
+        text = lambda: f"{label}: " + (" · ".join(t for _, t in parts) or "no activity in 30d")
+        while len(text()) > config.MAX_ROW_CHARS - 12 and len(parts) > 1:  # 12 = room for " (synthetic)"
+            parts.remove(min(parts, key=lambda x: x[0]))
+        return text()
+
+    if req_label:  # the posted requirement is the need to talk about: always first, details on their own row
         lp = leads[0]["payload"]
-        extra = []
-        if lp.get("suppliers_connected") is not None:
-            extra.append(f"{lp['suppliers_connected']} suppliers connected")
-        upd = next((e for e in in_window(events, "session") if e["payload"].get("kind") == "summary"
-                    and e["ts"] >= leads[0]["ts"] and (e["payload"].get("quantity") or e["payload"].get("requirement"))),
-                   None)
+        conn = lp.get("suppliers_connected")
+        head = [f"requirement posted {d(leads[0]['ts'])}"] + ([f"{conn} suppliers connected"] if conn is not None else [])
+        S["Buying Needs"].append(Row(need_row(req_label, groups[req_label], head, skip_bl=True),
+                                     synthetic=bool(leads[0]["synthetic"])))
+        detail = []
+        upd = next((e for e in said if e["ts"] >= leads[0]["ts"]
+                    and _overlap(e["payload"].get("requirement") or req_label, req_label)), None)
         if upd:  # the buyer confirmed or changed the requirement on one of our channels: that wins
             up = upd["payload"]
-            label = {"voice": "voice", "phone": "phone", "chat": "chat"}.get(upd["channel"], upd["channel"])
             q, r = up.get("quantity") or "", up.get("requirement") or ""
-            extra.append((r if q and q.split()[0] in r else " · ".join(x for x in (q, r) if x))
-                         + f" (buyer confirmed on {label}, {d(upd['ts'])})")
+            detail.append((r if q and q.split()[0] in r else " · ".join(x for x in (q, r) if x))
+                          + f" (buyer confirmed on {upd['channel']}, {d(upd['ts'])})")
         elif lp.get("details"):
             age = int(-recency(lp.get("confirmed_at") or leads[0]["ts"]))
             state = f"confirmed {age}d ago" if lp.get("confirmed_at") else f"unconfirmed for {age}d"
-            extra.append(f"{lp['details']} ({state}" + ("; read back once" if age * 24 > 48 else "") + ")")
-        conn = extra.pop(0) if extra and "suppliers connected" in extra[0] else None
-        S["Enquiries & Status"].append(Row(f"Buy requirement posted {d(leads[0]['ts'])}: {lp.get('title')}"
-                                           + (f" · {conn}" if conn else ""), synthetic=bool(leads[0]["synthetic"])))
-        if extra:  # requirement details on their own row so they are never cut off
-            S["Enquiries & Status"].append(Row("Details: " + " · ".join(extra), synthetic=bool(leads[0]["synthetic"])))
-        f.known.append((f"requirement: {leads[0]['payload'].get('title')}", "Enquiries & Status"))
-
-    # Categories Searched (top 3 on one line)
-    cats = Counter(a["payload"].get("category") for a in acts if a["payload"].get("category") not in (None, "", "-"))
+            detail.append(f"{lp['details']} ({state}" + ("; read back once" if age * 24 > 48 else "") + ")")
+        if detail:
+            S["Buying Needs"].append(Row("Details: " + " · ".join(detail), pinned=True,
+                                         synthetic=bool(leads[0]["synthetic"])))
+        f.known.append((f"requirement: {req_label}", "Buying Needs"))
+    # a requirement stated on our channels that is not the posted one is its own need
+    spoken = next((e for e in said if e is not upd and e["payload"].get("requirement")
+                   and not (req_label and _overlap(e["payload"]["requirement"], req_label))), None)
+    if spoken:
+        sp = spoken["payload"]
+        need = _label(sp["requirement"])
+        S["Buying Needs"].append(Row(f"{need[:1].upper() + need[1:]}: said on {spoken['channel']} {d(spoken['ts'])}"
+                                     + (f" · {sp['quantity']}" if sp.get("quantity") else ""),
+                                     synthetic=bool(spoken["synthetic"])))
+    others = sorted(((g, items) for g, items in groups.items() if g != req_label),
+                    key=lambda kv: (kv[1][0]["ts"], len(kv[1])), reverse=True)
+    shown = others[: 3 - bool(req_label) - bool(spoken)]
+    for label, items in shown:
+        S["Buying Needs"].append(Row(need_row(label, items), synthetic=bool(items[0]["synthetic"])))
+    if not groups and p.get("last_enquiry_title"):
+        S["Buying Needs"].append(Row(f"{p['last_enquiry_title'][:45]}: last enquiry (profile)"))
     past = in_window(events, "past_need")
-    past_txt = ", ".join(f"{e['payload'].get('item')} ({datetime.fromisoformat(e['ts'][:19]).strftime('%b')})"
-                         for e in past[:3])
-    if cats or past:
-        parts = [" · ".join(f"{c} ({n})" for c, n in cats.most_common(3))] if cats else []
-        if past_txt:
-            parts.append(f"earlier (12 mo): {past_txt}")
-        S["Categories Searched"].append(Row(" · ".join(parts), synthetic=any(e["synthetic"] for e in past)))
-        if cats:
-            f.known.append((f"interested in: {', '.join(top(cats, 3))}", "Categories Searched"))
-
-    # Sellers Contacted (company names only, never ids or numbers)
+    if past:
+        S["Buying Needs"].append(Row("Earlier (12 mo): " + ", ".join(
+            f"{e['payload'].get('item')} ({datetime.fromisoformat(e['ts'][:19]).strftime('%b')})" for e in past[:3]),
+            synthetic=any(e["synthetic"] for e in past)))
     contacted = {a["payload"].get("seller_glid") for a in acts
                  if a["payload"].get("type") in ("ENQ", "C2C") and a["payload"].get("seller_glid") not in (None, "0")}
-    wab = in_window(events, "whatsapp_bot")
-    names = list(dict.fromkeys(_seller_names(w["payload"].get("text", "") for w in wab)))
-    if contacted or names:
-        f.sources.add("sellers")
-        S["Sellers Contacted"].append(Row(f"{len(contacted)} sellers contacted (30d)"
-                                          + (f" · recent: {', '.join(names[:3])}" if names else "")))
-        if names:
-            f.known.append(("sellers already contacted", "Sellers Contacted"))
+    enq90 = int(num(p.get("enq_90d"))) if p else 0
+    if enq_acts or enq90 or contacted:
+        if contacted:
+            f.sources.add("sellers")
+        # activity log is fresher than the snapshot counter; show the counter only when it adds information
+        S["Buying Needs"].append(Row(f"Totals (30d): {len(enq_acts)} enquir{'y' if len(enq_acts) == 1 else 'ies'}"
+                                     + (f" ({enq90} in 90d)" if enq90 > len(enq_acts) else "")
+                                     + f" · {len(contacted)} seller{'s' * (len(contacted) != 1)} contacted",
+                                     pinned=True))
+    cats = Counter({g: len(items) for g, items in shown})
+    if cats:
+        f.known.append((f"interested in: {', '.join(top(cats, 3))}", "Buying Needs"))
 
     # KYC
     if p:
@@ -421,6 +510,7 @@ def buyer_facts(glid) -> Facts:
                             f" · GST {p.get('gst_status') or 'not available'}"))
 
     # Past Conversations
+    wab = in_window(events, "whatsapp_bot")
     sessions = _sessions(events)
     past, threads = _session_rows(f, sessions)
     if sessions:

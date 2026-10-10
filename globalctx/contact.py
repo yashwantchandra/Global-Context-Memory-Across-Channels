@@ -25,4 +25,4 @@ if __name__ == "__main__":
         md = refresh.rebuild_now(a.glid, role, use_llm=True)["md"]
         print(f"{role}/{a.glid}.md updated in {fast['freshness_ms']} ms")
     print(md[md.index("## Identity"):md.index("## Snapshot")].strip())
-    print(md[md.index("## Suggested Opening"):].strip())
+    print("Opening:", sessions.opening_for(a.glid, role))

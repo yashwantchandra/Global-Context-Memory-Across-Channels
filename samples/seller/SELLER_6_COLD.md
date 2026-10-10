@@ -1,7 +1,7 @@
 ---
 glid: SELLER_6_COLD
 role: seller
-generated_at: 2026-10-09T17:01:30.256
+generated_at: 2026-10-10T13:27:53.316
 last_event_at: null
 freshness_ms: null
 data_quality: cold_start
@@ -13,12 +13,12 @@ evicted: {}
 # Seller context · GLID SELLER_6_COLD
 
 ## Identity
-- Business: unknown · Preferred language: Hinglish (default)
+- Business: unknown · Contact: not known yet (ask once) · Preferred language: Hinglish (default)
 
 ## Snapshot
 - No profile data (cold start)
 
-## Leads & Enquiries
+## Buyer Demand by Product
 - No data in lookback window
 
 ## Responses & Calls
@@ -35,6 +35,3 @@ evicted: {}
 
 ## Do-Not-Ask
 - preferred language: Hinglish
-
-## Suggested Opening
-"Namaste! Main IndiaMART se Vani bol rahi hoon. Aap kuch khareedna chahte hain, ya apne business ke liye madad chahiye?"

@@ -1,6 +1,6 @@
 # Global Context: Memory Across Channels (PS02)
 
-IndiaMART Voice AI Hackathon 2.0 entry. The voice bot (Vani) already knows the buyer or seller before it speaks, and a conversation started on a call continues in chat without anything being asked twice.
+IndiaMART Voice AI Hackathon 2.0 entry. The voice bot (Mira) already knows the buyer or seller before it speaks, and a conversation started on a call continues in chat without anything being asked twice.
 
 ## What it does, in plain words
 1. **Collects history** for each user (GLID) from enquiries, buyer calls, buy-leads, WhatsApp, VANI bot calls, executive calls and our own conversations.
@@ -50,6 +50,10 @@ Voice (channel 1) uses the hosted Sarvam agent, with the file passed in when the
 .venv/bin/python -m globalctx.voice.phone poll                                      # pull finished calls back
 ```
 Tests: `.venv/bin/python -m pytest -q tests`.
+
+Evals (about 2.5 min, about 120 Sarvam LLM calls): `.venv/bin/python -m globalctx.evals`. It scores the PS02 metrics
+(re-asks with and without the file, resuming the thread, the opening, cold start, privacy, size, freshness) over 3
+runs per GLID, and writes `samples/evals/eval_results.md`. Our read of every flagged item is in `samples/evals/manual_review.md`.
 
 ## Sarvam agent
 - Agent ID: `Conversatio-c49cd61c-ee22` (team workspace).

@@ -1,14 +1,14 @@
 ---
 glid: SELLER_4
 role: seller
-generated_at: 2026-10-09T18:34:00.319
-last_event_at: 2026-10-09T18:33:59.711
-freshness_ms: 607
+generated_at: 2026-10-10T13:27:53.289
+last_event_at: 2026-10-09T18:37:43.707
+freshness_ms: 65098284
 data_quality: ok
 synthetic: true
 sources: [buyer_calls, buyleads, enquiries, exec_calls, profile, sessions, vani_calls, whatsapp]
 lookback: {buyer_calls: 90d, buyleads: 45d, enquiries: 90d, exec_calls: 60d, sessions: 30d, vani_calls: 90d, whatsapp: 30d}
-evicted: {past_conversations: 5, open_threads: 4, engagement_signals: 1}
+evicted: {past_conversations: 4, open_threads: 4}
 ---
 # Seller context · GLID SELLER_4
 
@@ -19,19 +19,20 @@ evicted: {past_conversations: 5, open_threads: 4, engagement_signals: 1}
 - [Name 1] · Hyderabad, Telangana · Proprietorship · turnover 5 - 25 Cr
 - Categories: 3 Ply Face Mask, ABIDA Basmati Rice, Ajwain · free listing · GST verified · mobile verified
 
-## Leads & Enquiries
-- Enquiries (90d): 34 received, 5 opened, replied on 4 (30d) · top: Toor Dal, HDPE Pipe 2 inch
-- Latest enquiry 09 Oct: HDPE Pipe 2 inch · a buyer from Lucknow · UNREAD (synthetic)
-- Buy-leads bought (45d): 46 · toor dal
+## Buyer Demand by Product
+- Toor Dal: 7 enquiries (2 unread), latest 20 Sep from Hyderabad · 7 buyer calls (4 answered) · 1 BuyLead bought
+- Abida 1121 Royal Basmati Rice: 6 enquiries (6 unread), latest 27 Sep from Hyderabad
+- Steam Rice: 4 enquiries (4 unread), latest 01 Oct from Hyderabad
+- Totals (90d): 34 enquiries, 5 opened, 4 replied · 7 buyer calls, 57% answered, avg 39s · 46 BuyLeads (45d)
 
 ## Responses & Calls
-- Buyer calls (90d): 7 received, 4 connected (57%), avg talk 39s
 - VANI bot calls (90d): 1 answered · Meeting Fixed 1 · last: Meeting Fixed (11 Sep)
 - Executive calls (60d): 22, 10 answered · last 21 Sep Answered
 
 ## Past Conversations
 - 09 Oct · Phone call (our bot): The user asked to add 100 coffee mugs to their catalogue at Rs 10/piece, and… (synthetic)
 - 09 Oct · Chat (our bot): User asked to add a new product catalogue for 100 wooden Kashmir willow cricket ba… (synthetic)
+- 09 Oct · Phone call (our bot): User agreed to discuss Kulthi Dal pricing and a complaint. (synthetic)
 
 ## Open Threads
 - Pending catalogue update: coffee mug · Add 100 coffee mugs to the catalogue at Rs 10/piece · 100 pieces @ R… (synthetic)
@@ -39,10 +40,7 @@ evicted: {past_conversations: 5, open_threads: 4, engagement_signals: 1}
 - Pending price update: Kulthi dal · Update listed price to Rs 50 per kg · 500 kg · Rs 50/kg (raised 09 Oct) (synthetic)
 
 ## Engagement Signals
-- No engagement data
+- pickup ratio 57% (90d) · WhatsApp read rate 84% (30d) · 1 WhatsApp replies (30d)
 
 ## Do-Not-Ask
-- city: Hyderabad, Telangana; categories: 3 Ply Face Mask, ABIDA Basmati Rice, Ajwain; business type; GST status; requirement: 100 coffee mugs; quantity: 100 pieces @ Rs 10/piece; language: Hinglish; name; preferred language: Hinglish
-
-## Suggested Opening
-"Namaste Yashwant ji! Main IndiaMART se Vani bol rahi hoon. Humne aapke coffee mugs aur cricket bats ki pending update request par kaam shuru kar diya hai."
+- city: Hyderabad, Telangana; categories: 3 Ply Face Mask, ABIDA Basmati Rice, Ajwain; business type; GST status; requirement: 100 coffee mugs; quantity: 100 pieces @ Rs 10/piece; business name; contact name; preferred language: Hinglish

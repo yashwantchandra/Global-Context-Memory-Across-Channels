@@ -16,9 +16,14 @@ from globalctx.resolve import resolve
 _live = {}  # session_id -> {glid, role, channel, messages, opening, cold}
 
 
-def _opening_from(md):
-    m = re.search(r'## Suggested Opening\n"(.+?)"', md, re.S)
-    return m.group(1).strip() if m else narrative.GENERIC["seller"]
+def opening_for(glid, role):
+    """The opening line is kept beside the file (profiles.opening), not inside it: the .md holds facts only."""
+    prof = store.get_profile(glid, role)
+    return (prof or {}).get("opening") or narrative.COLD_START
+
+
+def _opening_from(md):  # kept for old callers; the opening is no longer in the .md
+    return narrative.COLD_START
 
 
 def identity_check(md):
@@ -62,10 +67,10 @@ def load(glid, role=None):
 def _register(glid, role, channel, with_llm_messages):
     role, md, reason = load(glid, role)
     sid = uuid.uuid4().hex[:12]
-    opening = _opening_from(md)
+    opening = opening_for(str(glid), role)
     _live[sid] = {"glid": str(glid), "role": role, "channel": channel, "context": md, "opening": opening,
                   "cold": "data_quality: cold_start" in md, "reason": reason,
-                  "messages": [{"role": "system", "content": prompts.system_prompt(role, glid, channel, md)},
+                  "messages": [{"role": "system", "content": prompts.system_prompt(role, glid, channel, md, opening)},
                                {"role": "assistant", "content": opening}] if with_llm_messages else []}
     return sid, role, opening, md
 

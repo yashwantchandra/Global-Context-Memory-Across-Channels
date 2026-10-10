@@ -1,13 +1,13 @@
 ---
 glid: BUYER_5
 role: buyer
-generated_at: 2026-10-09T17:01:31.911
+generated_at: 2026-10-10T13:27:53.276
 last_event_at: 2026-10-09T17:00:35.269
-freshness_ms: 56642
+freshness_ms: 70926710
 data_quality: ok
 synthetic: true
-sources: [buyer_activity, buyleads, profile, sellers, sessions, whatsapp]
-lookback: {buyer_activity: 30d, buyleads: 45d, sellers: 30d, sessions: 30d, whatsapp: 30d}
+sources: [buyer_activity, buyleads, profile, sessions, whatsapp]
+lookback: {buyer_activity: 30d, buyleads: 45d, sessions: 30d, whatsapp: 30d}
 evicted: {past_conversations: 7, open_threads: 1}
 ---
 # Buyer context · GLID BUYER_5
@@ -19,16 +19,11 @@ evicted: {past_conversations: 7, open_threads: 1}
 - Greater Noida, India · Free buyer
 - on IndiaMART 3 Y 4 M
 
-## Enquiries & Status
-- 1 enquiries in last 30d
-- Latest enquiry 29 Sep: Servo Robot Arm
-- Buy requirement posted 01 Oct: ERP Software Development
-
-## Categories Searched
-- Paper Rewinding Machine (3) · Clutch Actuator (3) · Robotic Arm (2)
-
-## Sellers Contacted
-- 0 sellers contacted (30d) · recent: [Name 3], [Name 7], Cad Mech Engineering Private Li…
+## Buying Needs
+- ERP Software Development: requirement posted 01 Oct
+- Industrial safety helmets: said on chat 09 Oct · 20 pieces @ Rs 400/piece (synthetic)
+- Linear Slides: searched 1x · last 30 Sep
+- Totals (30d): 1 enquiry · 0 sellers contacted
 
 ## KYC
 - Mobile Verified · email Verified · GST Verified
@@ -47,7 +42,4 @@ evicted: {past_conversations: 7, open_threads: 1}
 - 26 actions in 30d: Browse 15, Others 5, Search 5, BL 1
 
 ## Do-Not-Ask
-- city: Greater Noida; requirement: ERP Software Development; interested in: Paper Rewinding Machine, Clutch Actuator, Robotic Arm; sellers already contacted; requirement: industrial safety helmets; quantity: 20 pieces @ Rs 400/piece; language: Hinglish; name;…
-
-## Suggested Opening
-"Namaste [Name 9] ji! Main IndiaMART se Vani bol rahi hoon. Aapki safety helmets aur servo robot arm ki enquiry par update dene ke liye call ki hai."
+- city: Greater Noida; requirement: ERP Software Development; interested in: Linear Slides; requirement: industrial safety helmets; quantity: 20 pieces @ Rs 400/piece; name; preferred language: Hinglish

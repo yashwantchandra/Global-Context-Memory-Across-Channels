@@ -6,8 +6,7 @@ or trimmed). What was dropped is counted in `evicted` for the front-matter.
 """
 from globalctx import config
 
-FIXED = {"Identity", "Snapshot", "Leads & Enquiries", "Responses & Calls", "Enquiries & Status", "KYC",
-         "Categories Searched", "Sellers Contacted"}
+FIXED = {"Identity", "Snapshot", "Buyer Demand by Product", "Responses & Calls", "Buying Needs", "KYC"}
 RANKED = {"Past Conversations", "Open Threads", "Engagement Signals"}
 NEVER_TRIM = {"Identity", "Snapshot", "Open Threads", "Do-Not-Ask", "Suggested Opening", "KYC"}
 MAX_PER_CHANNEL = 2

@@ -247,7 +247,7 @@ def view_data(glid: str):
         if rows:
             last = {"ms": rows[-1]["freshness_ms"], "trigger": rows[-1]["trigger_source"], "at": rows[-1]["generated_at"]}
     return {"glid": glid, "role": role, "role_reason": reason, "identity_check": check, "requests": reqs,
-            "last_freshness": last, **data}
+            "opening": sessions.opening_for(glid, role), "last_freshness": last, **data}
 
 
 @app.get("/chat/{role}/{glid}", response_class=HTMLResponse)

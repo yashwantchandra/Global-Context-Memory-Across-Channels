@@ -152,7 +152,7 @@ async function openCall(){
   if (!cur) return;
   const d = await (await fetch(`/api/phone/${cur.glid}`)).json();
   $('callTitle').textContent = `Call ${cur.name}`;
-  $('callSub').textContent = `${cur.role || ''} · GLID ${cur.glid} · Vani loads this person's file before speaking`;
+  $('callSub').textContent = `${cur.role || ''} · GLID ${cur.glid} · Mira loads this person's file before speaking`;
   $('callPhone').value = d.phone || '';
   $('callStatus').textContent = '';
   const poll = d.poller && d.poller.running ? `Result poller running${d.poller.last_error ? ' (last error: ' + d.poller.last_error + ')' : ''}: the call is written back to the file automatically.`

@@ -37,13 +37,13 @@ async def run(glid, role, chat=False, version=None, max_seconds=300):
 
     async def on_transcript(msg):
         who = "user" if msg.role == Role.USER else "bot"
-        print(f"{'You' if who == 'user' else 'Vani'}: {msg.content}", flush=True)
+        print(f"{'You' if who == 'user' else 'Mira'}: {msg.content}", flush=True)
         heard.append((who, msg.content))
 
     async def on_text(msg):  # chat mode: bot replies arrive as text messages
         text = getattr(msg, "text", None) or getattr(msg, "content", None)
         if text and chat:
-            print(f"Vani: {text}")
+            print(f"Mira: {text}")
             sessions.add_turn(sid, "bot", text)
 
     async def on_event(ev):

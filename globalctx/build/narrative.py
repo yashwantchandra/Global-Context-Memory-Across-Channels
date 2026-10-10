@@ -16,7 +16,7 @@ GENERIC = {
     "buyer": "Namaste! Main IndiaMART se bol rahi hoon. Aap kis product ke liye supplier dhoondh rahe hain?",
 }
 # A GLID with no history: we do not know yet whether they buy or sell, so the greeting must not assume
-COLD_START = ("Namaste! Main IndiaMART se Vani bol rahi hoon. Aap kuch khareedna chahte hain, "
+COLD_START = ("Namaste! Main IndiaMART se Mira bol rahi hoon. Aap kuch khareedna chahte hain, "
               "ya apne business ke liye madad chahiye?")
 
 
@@ -27,13 +27,13 @@ def basis(ctx: dict) -> str:
 def language_rule(lang):
     lang = lang or "Hinglish"
     if lang == "Hinglish":
-        return 'natural Hinglish in Roman script, like "Namaste ji! Main IndiaMART se Vani bol rahi hoon, ...".'
+        return 'natural Hinglish in Roman script, like "Namaste ji! Main IndiaMART se Mira bol rahi hoon, ...".'
     if lang == "English":
         return "simple Indian English."
     if lang == "Hindi":
         return "simple spoken Hindi in Devanagari script."
     return (f"simple spoken {lang} in its native script, keeping product names and 'IndiaMART' in English. "
-            f"The assistant's name is Vani.")
+            f"The assistant's name is Mira.")
 
 
 def name_rule(role, name, contact=None):
@@ -46,38 +46,81 @@ def name_rule(role, name, contact=None):
     return f"greet them as '{name} ji'."
 
 
+def _greet(role, ctx, en):
+    """'Namaste Yashwant ji!' / 'Namaste Dipu ji!' / 'Namaste ji!' (identity was already confirmed on calls)."""
+    who = ctx.get("contact") or (ctx.get("name").title() if role == "buyer" and ctx.get("name") else None)
+    if en:
+        return f"Hello {who} ji! This is Mira from IndiaMART." if who else "Hello! This is Mira from IndiaMART."
+    return (f"Namaste {who} ji! " if who else "Namaste ji! ") + "Main IndiaMART se Mira bol rahi hoon."
+
+
+def _pending_topic(rows):
+    """'Pending catalogue update: coffee mug · ...' -> ('coffee mug, cricket bat', 'catalogue')"""
+    items, kinds = [], []
+    for r in rows or []:
+        head, _, rest = r.partition(":")
+        product = rest.split("·")[0].strip()
+        if product and product.lower() not in [i.lower() for i in items]:
+            items.append(product)
+        kinds.append("price" if "price" in head.lower() else "catalogue")
+    return " aur ".join(items[:2]), ("price" if set(kinds) == {"price"} else "catalogue")
+
+
 def template_opening(role, ctx, data_quality):
+    """Deterministic opening from the file's own facts (no LLM). The voice agent rephrases it naturally."""
     if data_quality == "cold_start":
         return COLD_START
-    if not any(v for k, v in ctx.items() if k not in ("name", "language")):
-        return GENERIC[role]
-    # sellers are addressed by company ("Kya main X se baat kar rahi hoon?"), buyers by first name
-    name = f" {ctx['name'].title()} ji" if ctx.get("name") and role == "buyer" else ""
-    hello = f"Namaste! Kya main {ctx['name']} se baat kar rahi hoon?" if ctx.get("name") and role == "seller" else ""
-    if ctx.get("contact"):  # the person's own name, said in an earlier conversation, wins
-        name, hello = f" {ctx['contact']} ji", ""
-    s = ctx.get("latest_session")
-    if s and s.get("callback"):
-        topic = f" {s['requirement']} ke baare mein" if s.get("requirement") else ""
-        return f"{hello or f'Namaste{name}!'} Aapne {s['callback']} call karne ko kaha tha{topic}, isliye call kiya hai."
-    if s and s.get("requirement"):
-        return (f"{hello or f'Namaste{name}!'} Pichhli baar humari baat {s['requirement'][:60]} ke baare mein hui thi, "
-                f"wahin se aage badhte hain.")
+    en = (ctx.get("language") or "").lower() == "english"
+    hi = _greet(role, ctx, en)
+    s = ctx.get("latest_session") or {}
+
+    # 1. a callback the user asked for
+    if s.get("callback"):
+        about = f" about {s['requirement']}" if en and s.get("requirement") else (
+            f" {s['requirement']} ke baare mein" if s.get("requirement") else "")
+        return (f"{hi} You asked us to call you back on {s['callback']}{about}, so I am calling as promised."
+                if en else f"{hi} Aapne {s['callback']} call karne ko kaha tha{about}, isliye call kiya hai.")
+    # 2. seller: requests he raised come first
+    if role == "seller" and ctx.get("pending_requests_raised_by_seller"):
+        what, kind = _pending_topic(ctx["pending_requests_raised_by_seller"])
+        if what:
+            return (f"{hi} I am calling about your pending {kind} update for {what}. Shall we go over it?" if en else
+                    f"{hi} Aapki {what} ki {'price' if kind == 'price' else 'catalogue'} update request ke baare mein "
+                    f"call kiya hai. Kya hum details confirm kar lein?")
+    # 3. continue the last conversation
+    if s.get("requirement") or s.get("next_step"):
+        topic = s.get("requirement") or s.get("next_step")
+        qty = f" ({s['quantity']})" if s.get("quantity") else ""
+        return (f"{hi} Last time we spoke about {topic}{qty}. Let us continue from there." if en else
+                f"{hi} Pichhli baar humari baat {topic}{qty} ke baare mein hui thi, wahin se aage badhte hain.")
     if role == "seller":
+        # 4. leads from buyers (never the seller's own need)
         if ctx.get("unread_enquiries_from_buyers") and ctx.get("latest_enquiry_from_a_buyer"):
-            return (f"{hello or 'Namaste!'} Aapke paas {ctx['latest_enquiry_from_a_buyer']} ki nayi enquiry aayi hai, "
-                    f"kya main usme aapki madad karun?")
+            p = ctx["latest_enquiry_from_a_buyer"]
+            return (f"{hi} You have a new buyer enquiry for {p}. Shall I help you respond?" if en else
+                    f"{hi} Aapke paas {p} ki nayi buyer enquiry aayi hai. Kya main usme aapki madad karun?")
         if ctx.get("categories"):
-            return (f"{hello or 'Namaste!'} IndiaMART se bol rahi hoon, aapke {ctx['categories'][0]} business "
-                    f"ke baare mein baat karni thi.")
+            c = ctx["categories"][0]
+            return (f"{hi} I am calling about your {c} business on IndiaMART." if en else
+                    f"{hi} Aapke {c} business ke baare mein baat karni thi.")
     else:
+        # 5. buyer's open requirement
         if ctx.get("latest_requirement"):
-            return f"Namaste{name}! Aapne {ctx['latest_requirement']} ki requirement daali thi, kya aapko sahi supplier mil gaya?"
+            t, when = ctx["latest_requirement"], ctx.get("requirement_posted")
+            on = f" on {when}" if en and when else (f" {when} ko" if when else "")
+            if ctx.get("suppliers_connected") == 0:
+                return (f"{hi} You posted a requirement for {t}{on}. No supplier has connected yet, sorry about that. "
+                        f"Do you still need it?" if en else
+                        f"{hi} Aapne{on} {t} ki requirement daali thi. Abhi tak koi supplier connect nahi hua, "
+                        f"iske liye sorry. Kya abhi bhi zaroorat hai?")
+            return (f"{hi} You posted a requirement for {t}{on}. Did you find the right supplier?" if en else
+                    f"{hi} Aapne{on} {t} ki requirement daali thi. Kya aapko sahi supplier mil gaya?")
         if ctx.get("latest_enquiry"):
-            return f"Namaste{name}! Aapne {ctx['latest_enquiry']} ke liye enquiry ki thi, kya main aur options dikhaun?"
-    if name or hello:  # nothing specific to raise, but we know who they are
-        return (f"{hello} " if hello else f"Namaste{name}! ") + "Main IndiaMART se Vani bol rahi hoon. Aaj main aapki kya madad kar sakti hoon?"
-    return GENERIC[role]
+            e = ctx["latest_enquiry"]
+            return (f"{hi} You enquired about {e}. Shall I show you more options?" if en else
+                    f"{hi} Aapne {e} ke liye enquiry ki thi. Kya main aur options dikhaun?")
+    # 6. we know who they are, nothing specific to raise
+    return (f"{hi} How can I help you today?" if en else f"{hi} Aaj main aapki kya madad kar sakti hoon?")
 
 
 OPENING_PROMPT = """You are VANI, IndiaMART's voice assistant, placing a call TO this {role}. Write the first sentence VANI says.

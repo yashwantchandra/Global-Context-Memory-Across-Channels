@@ -31,7 +31,9 @@ def build(glid, role, trigger=None, use_llm=True):
     fx = F.facts_for(glid, role)
     prev = store.get_profile(glid, role)
     b = narrative.basis({"ctx": fx.opening_context, "q": fx.data_quality})
-    if prev and prev.get("opening_basis") == b and prev.get("opening"):
+    if config.OPENING_MODE != "llm":  # default: deterministic, free, instant (approach C)
+        opening, by = narrative.template_opening(role, fx.opening_context, fx.data_quality), "template"
+    elif prev and prev.get("opening_basis") == b and prev.get("opening"):
         opening, by = prev["opening"], "cached"
     elif use_llm:
         opening, by = narrative.llm_opening(role, fx.opening_context, fx.data_quality)
@@ -39,13 +41,11 @@ def build(glid, role, trigger=None, use_llm=True):
         opening, by = narrative.template_opening(role, fx.opening_context, fx.data_quality), "template"
 
     # freshness is measured from when the triggering event entered the store
-    if trigger:
-        ingested = trigger["ingested_at"]
-    else:
-        le = store.latest_event(glid, role)
-        ingested = le["ingested_at"] if le else None
     generated_at = store.now_iso()
-    freshness_ms = _ms_between(ingested, generated_at) if ingested else None
+    if trigger:  # event-driven rebuild: this is the freshness measurement (event entered store -> file written)
+        freshness_ms = _ms_between(trigger["ingested_at"], generated_at)
+    else:        # manual / sweep rebuild: keep the last real measurement instead of reporting file age
+        freshness_ms = (prev or {}).get("freshness_ms")
 
     def render_fn(sections, evicted):
         return render.render(fx, sections, evicted, generated_at, freshness_ms)
@@ -61,7 +61,7 @@ def build(glid, role, trigger=None, use_llm=True):
         log_freshness({
             "glid": glid, "role": role, "stage": "llm" if use_llm else "fast",
             "trigger_event_id": trigger.get("id"), "trigger_source": trigger.get("source"),
-            "event_ingested_at": ingested, "generated_at": generated_at, "freshness_ms": freshness_ms,
+            "event_ingested_at": trigger["ingested_at"], "generated_at": generated_at, "freshness_ms": freshness_ms,
             "chars": len(md), "opening_by": by,
         })
     return {"glid": glid, "role": role, "md": md, "chars": len(md), "freshness_ms": freshness_ms,

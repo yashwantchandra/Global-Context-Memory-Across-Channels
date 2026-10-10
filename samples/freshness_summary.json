@@ -1,5 +1,5 @@
 {
-  "events": 30,
+  "events": 32,
   "fast_ms_median": 13,
   "fast_ms_max": 41,
   "llm_ms_median": 519,

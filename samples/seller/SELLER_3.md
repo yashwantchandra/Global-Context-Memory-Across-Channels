@@ -1,9 +1,9 @@
 ---
 glid: SELLER_3
 role: seller
-generated_at: 2026-10-09T17:01:29.813
+generated_at: 2026-10-10T13:27:53.271
 last_event_at: 2026-10-01T20:31:42
-freshness_ms: 6861027
+freshness_ms: 77733187
 data_quality: ok
 synthetic: false
 sources: [buyer_calls, buyleads, enquiries, exec_calls, pns, profile, vani_calls, whatsapp]
@@ -13,19 +13,19 @@ evicted: {past_conversations: 2}
 # Seller context · GLID SELLER_3
 
 ## Identity
-- Business: [Name 1] · Preferred language: English (own messages)
+- Business: [Name 1] · Contact: not known yet (ask once) · Preferred language: English (phone calls)
 
 ## Snapshot
 - [Name 1] · Surat, Gujarat · Proprietorship · turnover 0 - 40 L
 - Categories: Bed Bug Control Spray, Body Lotions, Cockroach Repellent · free listing · GST verified · mobile verified
 
-## Leads & Enquiries
-- Enquiries (90d): 23 received, 23 opened, replied on 16 (30d) · top: Wash Bag, Acrylic Hair Comb
-- Latest enquiry 01 Oct: Wash Bag · a buyer from Surat · opened
-- Buy-leads bought (45d): 33 · Magic Mini Sponge Mop, massager
+## Buyer Demand by Product
+- Wash Bag: 8 enquiries, latest 01 Oct from Surat · 1 BuyLead bought
+- Acrylic Hair Comb: 5 enquiries, latest 29 Sep from Warangal
+- Hair Oil Applicator Comb: 5 enquiries, latest 16 Sep from Salem
+- Totals (90d): 23 enquiries, 23 opened, 16 replied · 27 buyer calls, 96% answered, avg 95s · 33 BuyLeads (45d)
 
 ## Responses & Calls
-- Buyer calls (90d): 27 received, 26 connected (96%), avg talk 95s
 - VANI bot calls (90d): 1 answered · Not Interested 1 · last: Not Interested (07 Sep)
 - Executive calls (60d): 13, 9 answered · last 23 Sep Answered
 
@@ -41,7 +41,4 @@ evicted: {past_conversations: 2}
 - WhatsApp read rate 66% (30d)
 
 ## Do-Not-Ask
-- city: Surat, Gujarat; categories: Bed Bug Control Spray, Body Lotions, Cockroach Repellent; business type; GST status; name; preferred language: English
-
-## Suggested Opening
-"Hello [Name 1] ji, I am VANI from IndiaMART. I am calling regarding your latest enquiry for Wash Bag."
+- city: Surat, Gujarat; categories: Bed Bug Control Spray, Body Lotions, Cockroach Repellent; business type; GST status; business name; preferred language: English
