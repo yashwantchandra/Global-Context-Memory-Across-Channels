@@ -132,10 +132,6 @@
         "payload": {
           "sellers": [
             {
-              "id": "SYN-S-1001",
-              "name": "Kaju Garments"
-            },
-            {
               "id": "SYN-S-1007",
               "name": "Delhi Knit House"
             }
@@ -165,7 +161,7 @@
     {
       "kind": "memory",
       "title": "Meera already remembers him",
-      "narration": "Five days ago Raju was looking for 200 Polo T-shirts. Two sellers connected, Delhi Knit House quoted ₹240 a piece, and then it went quiet. That unfinished deal is a thread."
+      "narration": "Five days ago Raju was looking for 200 Polo T-shirts. One seller connected, Delhi Knit House quoted ₹240 a piece, and then it went quiet. That unfinished deal is a thread."
     },
     {
       "kind": "event",
@@ -185,10 +181,10 @@
       "kind": "event",
       "title": "A call that didn't connect",
       "ago": "0",
-      "narration": "He calls Kaju Garments, one of the sellers on his old lead. The call has no mcat, but Kaju is already on this thread, so it lands in the right place.",
+      "narration": "He calls Delhi Knit House, the seller on his old lead. The call has no mcat, but Delhi Knit House is already on this thread, so it lands in the right place.",
       "event": {
         "type": "pns",
-        "counterparty": "SYN-S-1001",
+        "counterparty": "SYN-S-1007",
         "payload": {
           "connected": false
         }
@@ -208,7 +204,7 @@
         "turns": [
           [
             "bot",
-            "Namaste Raju ji! Aap phir se Polo T-Shirt dekh rahe hain. Pichli baar 200 pcs ki requirement thi, aur Delhi Knit House ne ₹240/pc quote kiya tha. Kya abhi bhi wahi requirement hai?"
+            "Namaste Raju ji! Aap phir se Polo T-Shirt dekh rahe hain. Pichli baar 200 piece ki requirement thi, aur Delhi Knit House ne ₹240 per piece quote kiya tha. Kya abhi bhi wahi requirement hai?"
           ],
           [
             "user",

@@ -52,7 +52,7 @@ def polo(c):
 def test_history_is_one_thread_with_a_quote():
     story.reset("raju")
     t = polo(context.build("SYN-B-2001", "buyer"))
-    assert t["stage"] == "IN_TALKS" and "quoted ₹240/pc" in t["status"]
+    assert t["stage"] == "IN_TALKS" and "earlier quote ₹240/pc" in t["status"] and "(for 200 pcs)" in t["status"]
     assert any("200" in k for k in t["known"])
 
 
@@ -60,7 +60,7 @@ def test_returning_buyer_lands_on_the_same_thread_with_a_returning_opening():
     r = play("raju", upto=3)
     assert r[2]["map_method"] == "exact" and not r[2]["new_thread"]
     c = context.build("SYN-B-2001", "buyer")
-    assert "phir se Polo T-Shirt" in c["opening"] and "₹240/pc" in c["opening"]
+    assert "phir se Polo T-Shirt" in c["opening"] and "₹240 per piece" in c["opening"]
 
 
 def test_call_without_mcat_maps_by_connected_seller():
@@ -74,7 +74,7 @@ def test_call_updates_qty_newest_wins_and_reaches_the_seller():
     t = polo(context.build("SYN-B-2001", "buyer"))
     assert t["stage"] == "PROMISED"
     assert any("500" in k for k in t["known"]) and not any("200" in k for k in t["known"])
-    assert "500" in context.build("SYN-S-1001", "seller")["md"]  # Kaju gets the update, as an aggregate
+    assert "500" in context.build("SYN-S-1007", "seller")["md"]  # Delhi Knit House gets the update, as an aggregate
 
 
 def test_complaint_becomes_ranked_problem_thread_linked_to_seller():

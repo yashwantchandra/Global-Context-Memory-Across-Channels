@@ -36,11 +36,14 @@ def _fact(t, key, value, src, ts):
 
 
 def _seller(t, sid, name, status, ts):
+    quote = status[len("quoted "):] if status.startswith("quoted ") else None
+    # a quote survives later updates (e.g. a missed call) and keeps its date and the qty it was for
+    q = {"quote": quote, "quote_ts": ts, "quote_qty": (t["facts"].get("qty") or {}).get("v")} if quote else {}
     for s in t["sellers"]:
         if s["id"] == sid:
-            s.update(status=status, ts=ts, name=name or s.get("name"))
+            s.update(status=status, ts=ts, name=name or s.get("name"), **q)
             return
-    t["sellers"].append({"id": sid, "name": name or sid, "status": status, "ts": ts})
+    t["sellers"].append({"id": sid, "name": name or sid, "status": status, "ts": ts, **q})
 
 
 def _name(glid):

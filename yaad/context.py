@@ -4,6 +4,7 @@ Ranking: open problem > pending promise / callback > fresh activity (24h) > ever
 Firewall: a seller's memory only ever holds aggregates about buyers (city, product, qty); buyer identities and
 complaints never reach it. guard.check redacts phones/emails/counterparty ids as a second line of defence.
 """
+import re
 from datetime import datetime
 from types import SimpleNamespace
 
@@ -64,6 +65,14 @@ def _v(t, k):
     return (t["facts"].get(k) or {}).get("v")
 
 
+def _spoken(text):
+    """Units the way a person says them in the opening line: '₹240/pc' -> '₹240 per piece', '200 pcs' -> '200 piece'."""
+    if not text:
+        return text
+    s = re.sub(r"\s*/\s*(pcs|pc|piece)\b", " per piece", str(text), flags=re.I)
+    return re.sub(r"\b(pcs|pc)\b", "piece", s, flags=re.I)
+
+
 def _known(t):
     labels = {"qty": "qty", "spec": "spec", "deadline": "needed by", "city": "deliver to", "buyer_city": "buyer city", "price": "price",
               "also_needs": "also needs", "unread_enquiries": "unread enquiries", "missed_calls": "missed buyer calls",
@@ -82,7 +91,17 @@ def _known(t):
 def _status(t):
     if t["role"] == "buyer" and t["sellers"]:
         conn = [s for s in t["sellers"]]
-        return f"{len(conn)} seller(s): " + "; ".join(f"{s['name']}: {s['status']}" for s in conn[:3])
+
+        def st(s):
+            q = s.get("quote")
+            if not q:
+                return s["status"]
+            when = f" on {_d(s['quote_ts'])}" if s.get("quote_ts") else ""
+            what = f" (for {s['quote_qty']})" if s.get("quote_qty") else ""
+            earlier = f"earlier quote {q}{when}{what}"
+            return earlier if s["status"].startswith("quoted") else f"{earlier}, then {s['status']}"
+        label = "1 seller" if len(conn) == 1 else f"{len(conn)} sellers"
+        return f"{label}: " + "; ".join(f"{s['name']}: {st(s)}" for s in conn[:3])
     return WHERE.get(t["stage"], t["stage"].lower())
 
 
@@ -175,14 +194,15 @@ def _opening(role, u, top, ranked):
         if (top["links"].get("last_search") and _hours(top["links"]["last_search"]) <= config.FRESH_HOURS
                 and _age_days(top["created_at"]) >= 2):
             # returning buyer: a fresh search on a thread we already know
-            qty = _v(top, "qty")
-            quoted = next((s for s in top["sellers"] if str(s.get("status", "")).startswith("quoted")), None)
+            qty = _spoken(_v(top, "qty"))
+            quoted = next((s for s in top["sellers"] if s.get("quote")), None)
             past = f" Pichli baar {qty} ki requirement thi" if qty else " Pichli baar bhi aapne ye dekha tha"
-            past += f", aur {quoted['name']} ne {quoted['status'].replace('quoted ', '')} quote kiya tha." if quoted else "."
+            past += f", aur {quoted['name']} ne {_spoken(quoted['quote'])} quote kiya tha." if quoted else "."
             return f"{hi} Aap phir se {prod} dekh rahe hain.{past} Kya abhi bhi wahi requirement hai?"
         if st == "SELLERS_CONNECTED":
             n = len(top["sellers"])
-            return f"{hi} Aapki {prod} requirement pe {n} sellers jude the, par baat aage nahi badhi. Kya main aur responsive sellers se connect karwa doon?"
+            jude = f"{top['sellers'][0]['name']} jude the" if n == 1 else f"{n} sellers jude the"
+            return f"{hi} Aapki {prod} requirement pe {jude}, par baat aage nahi badhi. Kya main aur responsive sellers se connect karwa doon?"
         if st == "BL_POSTED":
             return f"{hi} Aapne {prod} ki requirement daali hai. Kya main abhi achhe sellers se connect karwa doon?"
         if st == "IN_TALKS":
