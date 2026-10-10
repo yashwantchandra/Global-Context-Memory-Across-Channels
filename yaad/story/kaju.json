@@ -1,0 +1,72 @@
+{
+  "persona": "kaju",
+  "title": "Kaju · Seller",
+  "subtitle": "Kaju Garments, Tiruppur. T-shirt maker, busy, enquiries piling up.",
+  "glid": "SYN-S-1001",
+  "role": "seller",
+  "setup": {
+    "mcats": [
+      ["M301", "Polo T-Shirt", "P30"], ["M302", "T-Shirt Logo Printing", "P30"], ["M303", "Round Neck T-Shirt", "P30"],
+      ["M310", "Cricket Team Jersey", "P31"], ["M320", "Boys School Uniform", "P32"]
+    ],
+    "users": [
+      {"glid": "SYN-S-1001", "role": "seller", "name": "Kaju", "company": "Kaju Garments", "city": "Tiruppur",
+       "state": "Tamil Nadu", "language": "Hindi", "plan": "Paid seller", "kyc": "GST verified",
+       "flags": {"asked_bot": true, "objection": "says the plan is too costly"},
+       "activity": {"enquiries_received": 34, "bls_bought": 12, "reply_rate": "40%"},
+       "interests": ["Polo T-Shirt", "Round Neck T-Shirt", "Sports Jersey", "Corporate T-Shirts"], "synthetic": 1},
+      {"glid": "SYN-B-2001", "role": "buyer", "name": "Raju", "city": "Delhi", "state": "Delhi", "tier": "Tier 1",
+       "kyc": "GST verified", "language": "Hinglish", "plan": "Buyer",
+       "activity": {"enquiries": 10, "pns": 20, "bls": 10},
+       "interests": ["Polo T-Shirt", "Indian Cricket Team Jersey", "Boys School Uniform", "Kids School Uniforms",
+                     "Stitching Services", "Garment Stitching Service", "T-Shirt Designing",
+                     "Tractor Drawn Seed Cum Fertilizer Drill"],
+       "synthetic": 1},
+      {"glid": "SYN-B-3001", "role": "buyer", "name": "Kiran Shah", "company": "Shah Events", "city": "Ahmedabad",
+       "state": "Gujarat", "synthetic": 1},
+      {"glid": "SYN-B-3002", "role": "buyer", "name": "Neha Joshi", "company": "Joshi Academy", "city": "Pune",
+       "state": "Maharashtra", "synthetic": 1}
+    ],
+    "events": [
+      {"ago": "6d", "glid": "SYN-S-1001", "role": "seller", "type": "vani_call",
+       "payload": {"disposition": "Call Later", "callback": "after the weekend", "note": "Busy with a bulk order, asked VANI to call back after the weekend"}},
+      {"ago": "5d", "glid": "SYN-B-3001", "role": "buyer", "type": "enquiry", "mcat_id": "M303", "counterparty": "SYN-S-1001",
+       "payload": {"replied": false}},
+      {"ago": "3d", "glid": "SYN-B-3002", "role": "buyer", "type": "enquiry", "mcat_id": "M303", "counterparty": "SYN-S-1001",
+       "payload": {"replied": false}},
+      {"ago": "4d", "glid": "SYN-S-1001", "role": "seller", "type": "catalog_issue",
+       "payload": {"note": "Sent a new polo design photo on WhatsApp; it was never added to the catalog"}},
+      {"ago": "2h", "glid": "SYN-B-2001", "role": "buyer", "type": "bl_posted", "mcat_id": "M301",
+       "payload": {"qty": "500 pcs", "spec": "cotton pique, logo embroidery", "city": "Delhi"}}
+    ]
+  },
+  "steps": [
+    {"kind": "profile", "title": "Meet Kaju",
+     "narration": "Kaju runs Kaju Garments in Tiruppur: polo and round-neck T-shirts. 34 enquiries in 90 days, but he replies to only 40%. Leads are slipping away."},
+    {"kind": "before_after", "title": "Same seller, two openings",
+     "narration": "Today's VANI opens cold and pitches. Meera opens with what Kaju asked for last time.",
+     "cold": "Namaste, main IndiaMART se bol rahi hoon. Aap kya bechte hain?"},
+    {"kind": "memory", "title": "What Meera remembers about Kaju",
+     "narration": "A callback he asked for, buyer enquiries he hasn't read, a catalog photo stuck on WhatsApp. Three open threads, ranked."},
+    {"kind": "event", "title": "Raju's requirement reaches Kaju", "ago": "0",
+     "narration": "Raju's 500-piece Polo lead is matched to Kaju. One event, two memories. Watch what crosses the firewall and what doesn't.",
+     "event": {"glid": "SYN-B-2001", "role": "buyer", "type": "bl_matched", "mcat_id": "M301",
+               "payload": {"sellers": [{"id": "SYN-S-1001", "name": "Kaju Garments"}]}},
+     "split": true},
+    {"kind": "call", "title": "Meera calls Kaju",
+     "narration": "Meera calls Kaju with the fresh lead. He asks for the buyer's number, and Meera refuses. He commits to a quote.",
+     "suggest": ["Haan boliye", "Buyer ka number do, main khud baat kar lunga", "Theek hai, kal 11 baje tak polo ka quote bhej dunga"],
+     "fallback": {"channel": "Web call", "turns": [
+       ["bot", "Namaste ji, Kaju Garments se baat ho rahi hai? Aapne dobara call karne ko kaha tha, isliye call kiya hai. Aur Delhi se Polo T-Shirt ki fresh requirement bhi aayi hai."],
+       ["user", "Haan boliye. Buyer ka number do, main khud baat kar lunga."],
+       ["bot", "Ji, buyer ki personal details main share nahi kar sakti. Aap quote dijiye, main IndiaMART ke through unhe bhej deti hoon. Quote kab tak bhejenge?"],
+       ["user", "Theek hai, kal 11 baje tak polo T-shirt ka quote bhej dunga."],
+       ["bot", "Ji, kal 11 baje tak ka quote note kar liya. Dhanyavaad."]],
+       "platform_vars": {"next_step": "Send Polo T-shirt quote by 11 AM tomorrow", "product": "Polo T-Shirt", "outcome": "next_step_agreed"}},
+     "split": true},
+    {"kind": "card", "title": "Beyond the bot",
+     "narration": "An IndiaMART executive opens Kaju's card before dialling. Same memory, read by heading. No AI involved."},
+    {"kind": "reveal", "title": "What's underneath",
+     "narration": "Two API calls. Any IndiaMART bot (VANI, WhatsApp, CRM) gets memory by reading context at the start and posting events at the end."}
+  ]
+}

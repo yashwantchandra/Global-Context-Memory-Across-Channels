@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Yaad · memory across channels</title>
+<title>Meera · memory across channels</title>
 <style>
   :root{
     --bg:#faf9f5; --card:#ffffff; --ink:#1f1e1d; --ink2:#55534e; --mute:#8d8a83; --line:#e8e6dc; --soft:#f3f1ea;
@@ -106,6 +106,24 @@
   .guards div:before{content:"◆ ";color:var(--acc);font-size:10px}
   pre.md{white-space:pre-wrap;font:12.5px/1.55 var(--mono);background:#1f1e1d;color:#efe9dc;border-radius:14px;padding:16px;margin:16px 0 0;max-height:62vh;overflow:auto}
 
+  /* profile slide */
+  .profile{background:var(--card);border:1px solid var(--line);border-radius:26px;padding:30px;display:grid;grid-template-columns:150px 1fr;gap:26px;align-items:center}
+  .profile .pic{width:150px;height:150px;border-radius:50%;overflow:hidden;background:var(--soft)}
+  .profile h1{font-size:40px}
+  .profile .role{display:inline-block;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--acc);margin-bottom:4px}
+  .badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .bdg{font-size:13px;padding:5px 12px;border-radius:999px;background:var(--soft);color:var(--ink2)}
+  .bdg.ok{background:var(--ok-soft);color:var(--ok);font-weight:600}
+  .tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
+  .tile{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px}
+  .tile .v{font-family:var(--serif);font-size:38px;line-height:1;color:var(--acc)}
+  .tile .l{font-size:13px;color:var(--ink2);margin-top:6px}
+  .ints{margin-top:16px;background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px}
+  .ints .chip{font-size:13.5px;padding:5px 12px;margin:4px 6px 0 0}
+  .strip{margin-top:16px;display:flex;gap:12px;font-size:13.5px;color:var(--ink2)}
+  .strip div{flex:1;background:var(--acc-soft);border-radius:14px;padding:12px 14px}.strip b{font-family:var(--serif);font-size:20px;color:var(--acc);font-weight:500}
+  .ccard{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+  .ccard .bdg{font-size:12px;padding:3px 10px}
   /* split / firewall */
   .stage.wide{grid-template-columns:290px 1fr}
   .stage.wide .story h2{font-size:27px} .stage.wide .story .narr{font-size:16px}
@@ -181,13 +199,13 @@
 <!-- ============ PICKER ============ -->
 <section id="picker">
   <svg class="yaad big"><use href="#knot"/></svg>
-  <h1>Yaad</h1>
+  <h1>Meera</h1>
   <div class="tag">Every IndiaMART conversation picks up where the last one stopped, on any channel, for buyers and sellers alike.</div>
   <div class="personas">
-    <div class="pcard"><div class="av buyer">A</div><h2>Amit · Buyer</h2><p>Patil Constructions, Pune. Needs GI pipe for a site. His requirement keeps going unanswered.</p>
-      <button class="go" onclick="start('amit')">Follow Amit's journey →</button></div>
-    <div class="pcard"><div class="av seller">R</div><h2>Rakesh · Seller</h2><p>Shree Ganesh Steel Traders, Rajkot. Busy, asked for a callback, enquiries piling up.</p>
-      <button class="go" onclick="start('rakesh')">Follow Rakesh's journey →</button></div>
+    <div class="pcard"><div class="av buyer" style="overflow:hidden;padding:0" data-avatar="buyer"></div><h2>Raju · Buyer</h2><p>Delhi, GST verified. Five days ago he wanted 200 Polo T-shirts and the deal went quiet. Today he's back.</p>
+      <button class="go" onclick="start('raju')">Follow Raju's journey →</button></div>
+    <div class="pcard"><div class="av seller" style="overflow:hidden;padding:0" data-avatar="seller"></div><h2>Kaju · Seller</h2><p>Kaju Garments, Tiruppur. Makes polo and round-neck T-shirts. Busy, asked for a callback, enquiries piling up.</p>
+      <button class="go" onclick="start('kaju')">Follow Kaju's journey →</button></div>
   </div>
   <div class="mute small" style="margin-top:14px">One deal, two memories. Labelled synthetic customers · Sarvam voice + chat · two APIs</div>
 </section>
@@ -212,7 +230,7 @@
 
 <!-- ============ API DRAWER ============ -->
 <div id="drawer" class="hidden">
-  <div class="dh"><b>API calls</b><span class="mute">every screen is a real call to the Yaad service</span>
+  <div class="dh"><b>API calls</b><span class="mute">every screen is a real call to the Meera service</span>
     <span style="margin-left:auto;cursor:pointer" onclick="toggleDrawer()">close ✕</span></div>
   <div id="calls"></div>
 </div>
@@ -220,7 +238,7 @@
 <!-- ============ CHAT PANEL ============ -->
 <div class="panel hidden" id="chatp">
   <div class="ph"><div class="av buyer" id="chat-av" style="width:36px;height:36px;font-size:15px">A</div>
-    <div><h3 id="chat-title">WhatsApp</h3><div class="small mute">IndiaMART · Yaad · reads the same memory</div></div>
+    <div><h3 id="chat-title">WhatsApp</h3><div class="small mute">IndiaMART · Meera · reads the same memory</div></div>
     <button class="close" onclick="closeChat()">✕</button></div>
   <div id="msgs"></div>
   <div class="inp"><input id="inp" placeholder="Type as the customer…"><button onclick="send()">➤</button></div>
@@ -250,7 +268,7 @@
   // Sarvam Web SDK, vendored (yaad/web/vendor). The API key stays on our server: the SDK asks /v1/sarvam/ for a
   // single-use signed WSS URL, then talks to Sarvam directly.
   import { ConversationAgent, BrowserAudioInterface, InteractionType } from "/vendor/sarvam-conv-ai-sdk/browser.js";
-  window.YaadVoice = { ConversationAgent, BrowserAudioInterface, InteractionType };
+  window.MeeraVoice = { ConversationAgent, BrowserAudioInterface, InteractionType };
 </script>
 
 <script>
@@ -260,6 +278,25 @@ let S=null, persona=null, step=0, played=new Set(), last={}, prevThreads={}, vie
 const PIPE=['SEARCHING','BL_POSTED','SELLERS_CONNECTED','IN_TALKS','PROMISED'];
 const PIPE_LAB=['Searching','Posted','Connected','In talks','Promised'];
 const nice=s=>String(s||'').replace(/_/g,' ').toLowerCase();
+
+/* ---------- illustrated avatars (inline SVG, no image files) ---------- */
+function avatarSVG(role){
+  const buyer=role==='buyer';
+  const bg=buyer?'#e7efe3':'#f3e3d6', shirt=buyer?'#3c6ea8':'#c96442', collar=buyer?'#ffffff':'#f6e7df', hair='#2b2420', skin='#c98b62';
+  return `<svg viewBox="0 0 120 120" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+    <rect width="120" height="120" fill="${bg}"/>
+    <path d="M18 120c4-26 22-38 42-38s38 12 42 38z" fill="${shirt}"/>
+    ${buyer?`<path d="M50 84l10 12 10-12" fill="none" stroke="${collar}" stroke-width="4" stroke-linejoin="round"/><circle cx="60" cy="102" r="2.4" fill="${collar}"/><circle cx="60" cy="111" r="2.4" fill="${collar}"/>`
+           :`<path d="M47 84c4 6 9 9 13 9s9-3 13-9" fill="none" stroke="${collar}" stroke-width="4"/><rect x="74" y="98" width="14" height="10" rx="2" fill="${collar}" opacity=".8"/>`}
+    <rect x="52" y="64" width="16" height="16" rx="6" fill="${skin}"/>
+    <ellipse cx="60" cy="50" rx="19" ry="22" fill="${skin}"/>
+    <path d="M40 46c0-15 9-24 20-24s21 8 21 23c-5-6-11-9-21-9s-15 4-20 10z" fill="${hair}"/>
+    <circle cx="53" cy="52" r="2.2" fill="#2b2420"/><circle cx="67" cy="52" r="2.2" fill="#2b2420"/>
+    ${buyer?`<path d="M54 61c3 3 9 3 12 0" fill="none" stroke="#2b2420" stroke-width="2" stroke-linecap="round"/>`
+           :`<path d="M51 60c3-2 6-2 9 0 3-2 6-2 9 0" fill="none" stroke="#2b2420" stroke-width="3" stroke-linecap="round"/><path d="M55 65c2 1.5 8 1.5 10 0" fill="none" stroke="#2b2420" stroke-width="2" stroke-linecap="round"/>`}
+  </svg>`;
+}
+document.querySelectorAll('[data-avatar]').forEach(el=>el.innerHTML=avatarSVG(el.dataset.avatar));
 
 /* ---------- every API call goes through here, so the drawer can show it ---------- */
 async function api(method, url, body){
@@ -279,16 +316,23 @@ function logCall(method,url,body,data,ms,status){
 function toggleDrawer(){ $('drawer').classList.toggle('hidden'); $('btn-api').classList.toggle('on'); }
 
 /* ---------- picker / journey ---------- */
-async function start(p){
-  persona=p; step=0; played=new Set(); prevThreads={};
-  await api('POST',`/demo/reset/${p}`);
+/* journey progress is remembered per persona, so opening a journey again RESUMES it; only ⟲ Reset starts over */
+const SAVE_KEY='meera_progress_v1';
+function loadProgress(){ try{ return JSON.parse(localStorage.getItem(SAVE_KEY)||'{}'); }catch(e){ return {}; } }
+function saveProgress(){ try{ const all=loadProgress(); all[persona]={step,played:[...played],last}; localStorage.setItem(SAVE_KEY,JSON.stringify(all)); }catch(e){} }
+function clearProgress(p){ try{ const all=loadProgress(); delete all[p]; localStorage.setItem(SAVE_KEY,JSON.stringify(all)); }catch(e){} }
+async function start(p, fresh=false){
+  persona=p; prevThreads={};
+  const saved=fresh?null:loadProgress()[p];
+  if(saved){ step=saved.step||0; played=new Set(saved.played||[]); last=saved.last||{}; }
+  else { step=0; played=new Set(); last={}; clearProgress(p); await api('POST',`/demo/reset/${p}`); }
   S=await api('GET',`/demo/story/${p}`);
   $('picker').classList.add('hidden'); $('journey').classList.remove('hidden');
   $('who').textContent=S.title;
   render();
 }
 function home(){ closeChat(); closeVoice(); $('journey').classList.add('hidden'); $('picker').classList.remove('hidden'); }
-async function restart(){ await start(persona); }
+async function restart(){ closeChat(); closeVoice(true); lastCall[persona]=null; await start(persona, true); }
 function dots(){ $('dots').innerHTML=S.steps.map((s,i)=>`<div class="dot ${i<step?'done':''} ${i===step?'on':''}" title="${esc(s.title)}" onclick="go(${i})"></div>`).join(''); }
 let busy=false;
 async function go(i){
@@ -307,7 +351,7 @@ document.addEventListener('keydown',e=>{
 });
 
 async function render(){
-  dots();
+  dots(); saveProgress();
   const st=S.steps[step];
   let html=`<div class="n">Step ${step+1} of ${S.steps.length}</div><h2>${esc(st.title)}</h2><div class="narr">${esc(st.narration)}</div>`;
   if(st.kind==='event'){
@@ -335,6 +379,9 @@ let hadPrev=false;
 async function renderRight(st){
   hadPrev=Object.keys(prevThreads).length>0;
   document.querySelector('.stage').classList.toggle('wide', !!st.split);
+  if(st.kind==='profile'){
+    const c=await api('GET',`/v1/context/${S.glid}?role=${S.role}`); $('right').innerHTML=profileHTML(c); return;
+  }
   if(st.kind==='intro'){
     $('right').innerHTML=`<div class="stats"><div class="stat"><div class="big">80%</div><div style="margin-top:10px;font-size:17px">of buyer enquiries never get a seller reply</div></div>
       <div class="stat"><div class="big">42%</div><div style="margin-top:10px;font-size:17px">of VANI calls end "Not Interested"</div></div></div>
@@ -353,6 +400,28 @@ async function renderRight(st){
   const c=await api('GET',`/v1/context/${S.glid}?role=${S.role}`);
   $('right').innerHTML=memoryHTML(c, S.title.split(' ·')[0]+"'s memory", S.role);
   pulse();
+}
+const ACT_LABEL={enquiries:'enquiries sent',pns:'calls to sellers (PNS)',bls:'buy-leads posted',
+  enquiries_received:'enquiries received',bls_bought:'buy-leads bought',reply_rate:'reply rate'};
+function profileHTML(c){
+  const s=c.snapshot, buyer=S.role==='buyer', act=Object.entries(s.activity||{});
+  const name=buyer?s.name:(s.company||s.name);
+  return `<div class="profile"><div class="pic">${avatarSVG(S.role)}</div>
+      <div><div class="role">${buyer?'Buyer':'Seller'} · GLID ${esc(c.glid)}</div><h1>${esc(name)}</h1>
+        ${!buyer&&s.name?`<div class="mute" style="font-size:16px">${esc(s.name)}</div>`:''}
+        <div class="badges">${s.kyc?`<span class="bdg ok">✓ ${esc(s.kyc)}</span>`:''}
+          <span class="bdg">📍 ${esc(s.city||'')}${s.tier?` · ${esc(s.tier)}`:''}</span>
+          ${s.language?`<span class="bdg">🗣 ${esc(s.language)}</span>`:''}${s.plan?`<span class="bdg">${esc(s.plan)}</span>`:''}</div></div></div>
+    ${act.length?`<div class="tiles">${act.map(([k,v])=>`<div class="tile"><div class="v">${esc(v)}</div><div class="l">${esc(ACT_LABEL[k]||k)} · 90 days</div></div>`).join('')}</div>`:''}
+    ${(s.interests||[]).length?`<div class="ints"><div class="small mute" style="text-transform:uppercase;letter-spacing:.06em">${buyer?'Products of interest':'Sells'}</div>
+      ${s.interests.map(i=>`<span class="chip">${esc(i)}</span>`).join('')}</div>`:''}
+    <div class="strip"><div><b>80%</b> of IndiaMART enquiries never get a seller reply</div><div><b>42%</b> of VANI calls end "Not Interested"</div></div>`;
+}
+function cardStrip(c){
+  const s=c.snapshot||{}; if(!s.city&&!s.name) return '';
+  const act=Object.entries(s.activity||{}).map(([k,v])=>`${v} ${ACT_LABEL[k]||k}`.replace('reply rate ','reply ')).join(' · ');
+  return `<div class="ccard">${s.kyc?`<span class="bdg ok">✓ ${esc(s.kyc)}</span>`:''}<span class="bdg">📍 ${esc(s.city||'')}${s.tier?' · '+esc(s.tier):''}</span>
+    ${act?`<span class="bdg">${esc(act)}</span>`:''}${(s.interests||[]).slice(0,3).map(i=>`<span class="bdg">${esc(i)}</span>`).join('')}${(s.interests||[]).length>3?`<span class="bdg">+${s.interests.length-3}</span>`:''}</div>`;
 }
 function pipeline(t){
   if(t.kind!=='requirement') return '';
@@ -373,22 +442,22 @@ function threadHTML(t){
     ${t.next_step?`<div class="next-step">→ ${esc(t.next_step)}</div>`:''}</div>`;
 }
 function memoryHTML(c,title,role,compact=false){
-  const head=`<div class="memhead"><div class="av ${role}" style="width:34px;height:34px;font-size:15px">${esc((c.snapshot.name||'?')[0])}</div>
+  const head=`<div class="memhead"><div class="av ${role}" style="width:38px;height:38px;overflow:hidden">${avatarSVG(role)}</div>
     <h3>${esc(title)}</h3>${compact?'':`<div class="toggle"><button class="${view==='card'?'on':''}" onclick="setView('card')">Card</button><button class="${view==='md'?'on':''}" onclick="setView('md')">.md</button></div>`}
     <div class="meta">${c.tokens} tokens · ${c.build_ms} ms${compact?'':'<br>'+esc([c.snapshot.city,c.snapshot.language].filter(Boolean).join(' · '))}</div></div>`;
   if(view==='md'&&!compact) return `<div class="mem">${head}<pre class="md">${esc(c.md)}</pre></div>`;
   if(!c._marked){ c._marked=true; }
   const ths=c.threads.slice(0,compact?3:4).map(threadHTML).join('')||'<div class="note">No open threads. A clean, generic welcome.</div>';
-  return `<div class="mem">${head}<div class="bubble"><div class="l">Bot opens with</div>${esc(c.opening)}</div>${ths}
+  return `<div class="mem">${head}${compact?'':cardStrip(c)}<div class="bubble"><div class="l">Bot opens with</div>${esc(c.opening)}</div>${ths}
     ${compact?'':`<div class="guards">${c.guardrails.map(g=>`<div>${esc(g)}</div>`).join('')}</div>`}</div>`;
 }
 function setView(v){ view=v; renderRight(S.steps[step]); }
 async function renderSplit(){
   const [b,s]=await Promise.all([api('GET','/v1/context/SYN-B-2001?role=buyer'),api('GET','/v1/context/SYN-S-1001?role=seller')]);
-  $('right').innerHTML=`<div class="split">${memoryHTML(b,"Amit's memory (buyer)",'buyer',true)}
+  $('right').innerHTML=`<div class="split">${memoryHTML(b,"Raju's memory (buyer)",'buyer',true)}
     <div class="wall"><div class="ic">🛡</div><b>Firewall</b><div class="ok"><div>city</div><div>product</div><div>quantity</div><div>spec</div></div>
     <div class="no"><div>name</div><div>company</div><div>phone</div><div>complaints</div></div></div>
-    ${memoryHTML(s,"Rakesh's memory (seller)",'seller',true)}</div>`;
+    ${memoryHTML(s,"Kaju's memory (seller)",'seller',true)}</div>`;
   pulse();
 }
 function execCard(c){
@@ -416,7 +485,7 @@ function pulse(){ const m=$('mark'); m.classList.remove('pulse'); void m.offsetW
 function addMsg(who,text,meta=''){ $('msgs').insertAdjacentHTML('beforeend',`<div class="msg ${who}">${esc(text)}<div class="tm">${esc(meta)}</div></div>`); $('msgs').scrollTop=1e9; }
 async function openChat(){
   closeVoice(); $('chatp').classList.remove('hidden'); $('msgs').innerHTML='';
-  $('chat-av').textContent=S.role==='buyer'?'A':'R'; $('chat-title').textContent=S.title.split(' ·')[0]+' · WhatsApp';
+  $('chat-av').innerHTML=avatarSVG(S.role); $('chat-av').style.overflow='hidden'; $('chat-title').textContent=S.title.split(' ·')[0]+' · WhatsApp';
   const d=await api('POST','/v1/chat/start',{glid:S.glid,role:S.role}); chatId=d.chat_id;
   addMsg('sys',`The bot read ${S.role}.md (${d.context_tokens} tokens) before the first message`); addMsg('bot',d.opening,'from memory · no wait');
   $('inp').focus();
@@ -436,21 +505,28 @@ async function endChat(){
 function closeChat(){ $('chatp').classList.add('hidden'); }
 
 /* ---------- internet call (Sarvam Web SDK) ---------- */
-let vAgent=null, vTurns=[], vEnded=true, vMuted=false;
+let vAgent=null, vTurns=[], vEnded=true, vMuted=false; const lastCall={};
 const STATE_LABEL={connecting:['Connecting…','busy'],connected:['Connected','live'],listening:['Listening','live'],speaking:['Agent speaking','busy'],idle:['Ended',''],error:['Error','err']};
 function vState(label,cls=''){ $('v-state').textContent=label; $('v-state').className='vstate '+cls; }
 function vButtons(live){ $('v-start').disabled=live; $('v-mute').disabled=!live; $('v-end').disabled=!live; }
 function vMsg(who,text){ $('v-trans').insertAdjacentHTML('beforeend',`<div class="msg ${who==='user'?'user':''}" style="max-width:92%">${esc(text)}</div>`); $('v-trans').scrollTop=1e9; }
 function openVoice(){
   closeChat(); $('voicep').classList.remove('hidden');
-  $('v-av').textContent=S.role==='buyer'?'A':'R'; $('v-av').className='av '+S.role; $('v-who').textContent=S.title.split(' ·')[0];
-  if(!vAgent){ vState('Ready'); vButtons(false); $('v-trans').innerHTML=''; $('v-orb').className='orb'; }
+  $('v-av').innerHTML=avatarSVG(S.role); $('v-av').className='av '+S.role; $('v-av').style.overflow='hidden'; $('v-who').textContent=S.title.split(' ·')[0];
+  if(!vAgent){
+    vButtons(false); $('v-orb').className='orb';
+    const lc=lastCall[persona];
+    if(lc){ // reopening after a call shows that call, not a blank panel; Start call begins a new one
+      vState('Last call saved','live'); $('v-trans').innerHTML=''; lc.turns.forEach(([w,t])=>vMsg(w,t)); $('v-note').innerHTML=lc.note;
+      $('v-start').textContent='🎙 Start a new call';
+    } else { vState('Ready'); $('v-trans').innerHTML=''; $('v-start').textContent='🎙 Start call'; }
+  }
 }
 async function startVoice(){
   if(vAgent) return;
-  if(!window.YaadVoice){ $('v-note').innerHTML='<div class="note">The voice SDK did not load. Use Replay below.</div>'; return; }
+  if(!window.MeeraVoice){ $('v-note').innerHTML='<div class="note">The voice SDK did not load. Use Replay below.</div>'; return; }
   vTurns=[]; vEnded=false; vMuted=false; $('v-trans').innerHTML=''; vButtons(true);
-  const {ConversationAgent,BrowserAudioInterface,InteractionType}=window.YaadVoice;
+  const {ConversationAgent,BrowserAudioInterface,InteractionType}=window.MeeraVoice;
   try{
     // get the microphone first, so a Sarvam session is never opened while Chrome's permission prompt is pending
     vState('Waiting for microphone…','busy');
@@ -494,7 +570,8 @@ async function finishVoice(by='user'){
   const r=await api('POST','/v1/voice/end',{glid:S.glid,role:S.role,turns:vTurns,interaction_id:iid});
   if(r.skipped){ vState('Ended'); $('v-note').innerHTML=`<div class="note">Nothing saved: ${esc(r.skipped)}.</div>`; return; }
   vState('Saved','live'); showSaved(r);
-  setTimeout(()=>{ closeVoice(true); renderRight(S.steps[step]); },1800);
+  lastCall[persona]={turns:vTurns.slice(), note:$('v-note').innerHTML};
+  renderRight(S.steps[step]);  // memory updates behind the panel; the panel stays open with the transcript
 }
 function closeVoice(force=false){ if(vAgent&&!force) finishVoice('user'); $('voicep').classList.add('hidden'); }
 async function replay(){

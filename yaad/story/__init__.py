@@ -6,7 +6,7 @@ from pathlib import Path
 from .. import db, updater
 
 DIR = Path(__file__).parent
-PERSONAS = ("amit", "rakesh")
+PERSONAS = ("raju", "kaju")
 
 
 def load(persona):
@@ -30,9 +30,11 @@ def all_glids():
 
 
 def reset(persona):
-    """Wipe every story customer, then load this persona's setup (users, mcats, history events)."""
+    """Put this persona back to the start of its journey. Only this persona's customers are wiped: the other
+    persona's main customer (and everything said to them) is kept, so switching journeys never erases a call."""
     s = load(persona)
-    db.wipe(all_glids())
+    others = {load(p)["glid"] for p in PERSONAS if p != persona}
+    db.wipe({u["glid"] for u in s["setup"]["users"]} - others)
     for mid, name, parent in s["setup"]["mcats"]:
         db.upsert_mcat(mid, name, parent)
     for u in s["setup"]["users"]:

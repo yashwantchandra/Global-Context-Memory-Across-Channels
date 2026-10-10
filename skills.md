@@ -76,6 +76,17 @@ A running log of what we did, which tools we used and what we learned. Newest at
 18. **Demo = product:** one page, persona picker, each step fires a real `POST /v1/event`, the API drawer shows every
     request/response, live chat and phone (with a "replay recorded" safety net), split view across the firewall.
 
+19. **Personas from real-looking profiles (Raju, Kaju) and a customer card.** Each md now opens with a 3-line card
+    (location/tier, GST verified, 90-day activity, products of interest); each journey opens with a profile slide.
+    A "returning buyer" opening fires when a fresh search lands on an older thread.
+20. **"It erased my call":** the log showed `POST /demo/reset` right after the call. Opening a journey always reset
+    it, and resetting one persona wiped the other (they share customers). Fix: journeys resume (progress saved in the
+    browser), a reset only touches that persona's own customers, a live conversation closes a thread only on explicit
+    words ("mil gaya", "nahi chahiye"), and closed threads stay visible.
+21. **Live bot test of both journeys** caught re-asked deadlines (now a "needed by" fact), missing closings (one
+    closing statement on "dhanyavaad"), and asking about a callback during the callback (this call *is* the callback).
+    The product was renamed **Meera**.
+
 ## Learnings
 - Writing the rules down first (thread statuses, lookbacks, budget) made the code small and the demo explainable.
 - Claude must not read raw customer text (it counts as a third party), so we developed on labelled synthetic

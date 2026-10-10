@@ -4,10 +4,14 @@ Fast lane (every event, no LLM, ~ms): stage, facts (newest wins, with source + t
 Slow lane (conversations only, ~1 s): the transcript is summarised once by the LLM (extract.conversation), which
 gives the next step, new facts (qty...), a short thread summary, and any complaint.
 """
+import re
 import time
 
 from . import db, extract, mapper
 
+CLOSE_WORDS = re.compile(r"(mil gaya|mil gayi|mil gaye|deal ho gayi|deal final|order de diya|order kar diya|kharid liya|"
+                         r"le liya|nahi chahiye|zarurat nahi|zaroorat nahi|need nahi|requirement khatam|already bought|"
+                         r"no longer need|मिल गया|नहीं चाहिए)", re.I)
 BUYER_STAGES = ["SEARCHING", "BL_POSTED", "SELLERS_CONNECTED", "IN_TALKS", "PROMISED", "CLOSED"]
 CHANNEL = {"search": "Search", "bl_posted": "BuyLead", "bl_matched": "BuyLead", "enquiry": "Enquiry", "pns": "PNS call",
            "complaint": "Complaint", "lead_bought": "BuyLead", "vani_call": "VANI call", "catalog_issue": "WhatsApp",
@@ -92,6 +96,7 @@ def apply(ev, mirror=True):
     if ev["role"] == "buyer":
         if typ == "search":
             _advance(t, "SEARCHING")
+            t["links"]["last_search"] = ts
             for k in ("qty", "city"):
                 _fact(t, k, p.get(k), "search", ts)
         elif typ == "bl_posted":
@@ -105,8 +110,8 @@ def apply(ev, mirror=True):
         elif typ == "enquiry":
             _advance(t, "IN_TALKS" if p.get("replied") else "SELLERS_CONNECTED")
             if ev.get("counterparty"):
-                _seller(t, ev["counterparty"], _name(ev["counterparty"]),
-                        "replied" if p.get("replied") else "enquired, no reply", ts)
+                status = (f"quoted {p['quote']}" if p.get("quote") else "replied") if p.get("replied") else "enquired, no reply"
+                _seller(t, ev["counterparty"], _name(ev["counterparty"]), status, ts)
             _fact(t, "also_needs", p.get("also_needs"), "enquiry", ts)
         elif typ == "pns":
             _advance(t, "IN_TALKS" if p.get("connected") else "SELLERS_CONNECTED")
@@ -151,12 +156,15 @@ def apply(ev, mirror=True):
 
     # ---- slow lane results
     if x:
-        for k in ("qty", "spec", "price"):
+        for k in ("qty", "spec", "price", "deadline"):
             _fact(t, k, x.get(k), "conversation", ts)
         if x.get("summary"):
             t["summary"] = x["summary"]
-        # a requirement is closed only when nothing is pending; a complaint never means the need was fulfilled
-        if x.get("closed") and not x.get("next_step") and not x.get("complaint_issue"):
+        # a requirement is closed only when the customer explicitly says so and nothing is pending;
+        # a polite goodbye or a complaint never means the need was fulfilled
+        said = " ".join(t for s_, t in p.get("turns", []) if s_ == "user")
+        if (x.get("closed") and not x.get("next_step") and not x.get("complaint_issue")
+                and CLOSE_WORDS.search(said)):
             t["stage"] = "CLOSED" if ev["role"] == "buyer" else "RESPONDED"
             t["next_step"] = ""
         elif x.get("next_step"):
@@ -165,6 +173,8 @@ def apply(ev, mirror=True):
         if x.get("language"):
             t["links"]["language"] = x["language"]
 
+    if ts >= (t["last_activity"] or ""):
+        t["links"]["last_event"] = typ
     t["last_activity"] = max(t["last_activity"] or ts, ts)
     t["last_channel"] = (p.get("channel") if typ == "conversation" else CHANNEL.get(typ, typ))
     t["n_events"] = (t["n_events"] or 0) + 1

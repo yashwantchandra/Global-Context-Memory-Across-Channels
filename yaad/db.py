@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS users (
   glid TEXT, role TEXT,                          -- the same GLID can be a buyer and a seller
   name TEXT, company TEXT, city TEXT, state TEXT, tier TEXT, language TEXT, plan TEXT, kyc TEXT,
   flags TEXT,                                    -- JSON: dnd, asked_bot, frustrated, objection, has_executive
+  activity TEXT,                                 -- JSON: 90-day counts for the customer card (enquiries, pns, bls…)
+  interests TEXT,                                -- JSON list: products of interest (buyer) / products sold (seller)
   synthetic INTEGER DEFAULT 0,
   PRIMARY KEY (glid, role)
 );
@@ -43,7 +45,7 @@ CREATE TABLE IF NOT EXISTS threads (
 CREATE INDEX IF NOT EXISTS ix_threads ON threads(glid, role, last_activity);
 CREATE TABLE IF NOT EXISTS freshness (event_id INTEGER, glid TEXT, role TEXT, received_at REAL, ready_at REAL, ms REAL);
 """
-JSON_COLS = {"facts": {}, "sellers": [], "links": {}, "flags": {}, "payload": {}}
+JSON_COLS = {"facts": {}, "sellers": [], "links": {}, "flags": {}, "payload": {}, "activity": {}, "interests": []}
 
 
 def conn() -> sqlite3.Connection:
@@ -54,6 +56,10 @@ def conn() -> sqlite3.Connection:
         c.row_factory = sqlite3.Row
         c.execute("PRAGMA journal_mode=WAL")
         c.executescript(SCHEMA)
+        have = {r[1] for r in c.execute("PRAGMA table_info(users)")}
+        for col in ("activity", "interests"):  # migrate databases created before the customer card existed
+            if col not in have:
+                c.execute(f"ALTER TABLE users ADD COLUMN {col} TEXT")
         _local.c, _local.path = c, str(config.DB_PATH)
     return c
 
@@ -78,7 +84,7 @@ def _dump(d):
 
 # ---------------------------------------------------------------- users & mcats
 def upsert_user(u):
-    u = _dump({"flags": {}, "synthetic": 0, **u})
+    u = _dump({"flags": {}, "activity": {}, "interests": [], "synthetic": 0, **u})
     cols = ",".join(u)
     conn().execute(f"INSERT OR REPLACE INTO users({cols}) VALUES ({','.join('?' * len(u))})", tuple(u.values()))
     conn().commit()

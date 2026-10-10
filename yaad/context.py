@@ -37,6 +37,10 @@ def _d(ts):
         return ""
 
 
+def _age_days(ts):
+    return _hours(ts or "") / 24
+
+
 def tier(city):
     c = (city or "").strip().lower()
     return "Tier 1" if c in TIER1 else "Tier 2" if c in TIER2 else ("Tier 3" if c else "")
@@ -61,7 +65,7 @@ def _v(t, k):
 
 
 def _known(t):
-    labels = {"qty": "qty", "spec": "spec", "city": "deliver to", "buyer_city": "buyer city", "price": "price",
+    labels = {"qty": "qty", "spec": "spec", "deadline": "needed by", "city": "deliver to", "buyer_city": "buyer city", "price": "price",
               "also_needs": "also needs", "unread_enquiries": "unread enquiries", "missed_calls": "missed buyer calls",
               "callback_asked": "callback asked", "last_vani_outcome": "last VANI outcome", "issue": "issue",
               "about_seller": "about seller"}
@@ -95,10 +99,39 @@ def _snapshot(u, role, ths):
         return {}
     s = {k: u.get(k) for k in ("name", "company", "city", "state", "language", "plan", "kyc") if u.get(k)}
     s["tier"] = u.get("tier") or tier(u.get("city"))
+    s["activity"] = u.get("activity") or {}
+    s["interests"] = u.get("interests") or []
     lang = next((t["links"].get("language") for t in ths if t["links"].get("language")), None)
     if lang:
         s["language"] = lang
     return s
+
+
+ACTIVITY_LABELS = {"enquiries": "enquiries", "pns": "PNS calls", "bls": "buy-leads",
+                   "enquiries_received": "enquiries received", "bls_bought": "buy-leads bought",
+                   "reply_rate": "reply rate"}
+
+
+def card_lines(snap, role, max_interests=6):
+    """The 3-line customer card at the top of every memory file."""
+    if not snap:
+        return []
+    state = snap.get("state") if snap.get("state") != snap.get("city") else None
+    place = ", ".join(x for x in [snap.get("city"), state] if x)
+    place += f" ({snap['tier']})" if snap.get("tier") and place else ""
+    who = " · ".join(x for x in [snap.get("company") if role == "seller" else None, snap.get("name"), place,
+                                 snap.get("kyc"), snap.get("plan") if role == "seller" else None,
+                                 snap.get("language")] if x)
+    lines = [f"- {who}"]
+    act = snap.get("activity") or {}
+    if act:
+        lines.append("- Activity (90 days): " + " · ".join(
+            f"{v} {ACTIVITY_LABELS.get(k, k)}" if k != "reply_rate" else f"reply rate {v}" for k, v in act.items()))
+    ints = snap.get("interests") or []
+    if ints:
+        more = f" (+{len(ints) - max_interests})" if len(ints) > max_interests else ""
+        lines.append(("- Sells: " if role == "seller" else "- Interested in: ") + ", ".join(ints[:max_interests]) + more)
+    return lines
 
 
 def _guardrails(role, u, ths):
@@ -139,6 +172,14 @@ def _opening(role, u, top, ranked):
             return f"{hi} Pehle aapki complaint ki baat: humari support team us par kaam kar rahi hai.{tail}"
         if st == "PROMISED":
             return f"{hi} Pichli baar {top['last_channel']} pe aapki {prod} requirement ki baat hui thi. Usi ka update dene ke liye sampark kiya hai. Baat karein?"
+        if (top["links"].get("last_search") and _hours(top["links"]["last_search"]) <= config.FRESH_HOURS
+                and _age_days(top["created_at"]) >= 2):
+            # returning buyer: a fresh search on a thread we already know
+            qty = _v(top, "qty")
+            quoted = next((s for s in top["sellers"] if str(s.get("status", "")).startswith("quoted")), None)
+            past = f" Pichli baar {qty} ki requirement thi" if qty else " Pichli baar bhi aapne ye dekha tha"
+            past += f", aur {quoted['name']} ne {quoted['status'].replace('quoted ', '')} quote kiya tha." if quoted else "."
+            return f"{hi} Aap phir se {prod} dekh rahe hain.{past} Kya abhi bhi wahi requirement hai?"
         if st == "SELLERS_CONNECTED":
             n = len(top["sellers"])
             return f"{hi} Aapki {prod} requirement pe {n} sellers jude the, par baat aage nahi badhi. Kya main aur responsive sellers se connect karwa doon?"
@@ -171,10 +212,7 @@ def _md(glid, role, snap, views, problems, guardrails, opening, meta, keep_summa
             f"last_event_at: {meta['last_event_at']}", f"language: {snap.get('language', 'Hinglish')}",
             f"cold_start: {str(meta['cold']).lower()}", f"synthetic: {str(meta['synthetic']).lower()}", "---",
             f"# {'Buyer' if role == 'buyer' else 'Seller'} memory · {snap.get('company') or snap.get('name') or glid}", ""]
-    who = " · ".join(x for x in [snap.get("name"), snap.get("company"), ", ".join(
-        x for x in [snap.get("city"), snap.get("state")] if x) + (f" ({snap['tier']})" if snap.get("tier") else ""),
-        snap.get("plan"), snap.get("language")] if x)
-    body = ["## Snapshot", f"- {who}" if who else "- (no profile on record)", "", "## Open problems"]
+    body = ["## Customer card"] + (card_lines(snap, role) or ["- (no profile on record)"]) + ["", "## Open problems"]
     body += [f"- {p['id']} · {p['title']} [OPEN] {_d(p['last_activity'])}: {p['summary']} → {p['next_step']}"
              for p in problems] or ["- none"]
     body += ["", "## Threads"]
@@ -200,7 +238,7 @@ def build(glid, role):
     cold = not u and not ths
     ranked = sorted(ths, key=lambda t: (rank(t), -(datetime.fromisoformat(t["last_activity"][:19]).timestamp())))
     live = [t for t in ranked if rank(t) < 9]
-    views = [view(t, i + 1) for i, t in enumerate(live)]
+    views = [view(t, i + 1) for i, t in enumerate(ranked)]  # closed threads stay visible, ranked last
     problems = [v for v in views if v["kind"] == "problem" and v["stage"] == "OPEN"]
     top = live[0] if live else None
     snap = _snapshot(u, role, ths)

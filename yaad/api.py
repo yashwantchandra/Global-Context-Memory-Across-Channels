@@ -1,4 +1,4 @@
-"""Yaad service. The product is two calls:
+"""Meera service. The product is two calls:
 
     POST /v1/event              any IndiaMART system or conversation reports activity
     GET  /v1/context/{glid}     any bot reads the customer's memory before it speaks
@@ -20,7 +20,7 @@ from . import config, context, db, story, updater
 from .channels import phone
 from .channels.chat import CHATS, Chat
 
-app = FastAPI(title="Yaad · memory across channels")
+app = FastAPI(title="Meera · memory across channels")
 WEB = Path(__file__).parent / "web"
 
 _subs: list = []

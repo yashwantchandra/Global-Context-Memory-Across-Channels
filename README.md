@@ -1,4 +1,4 @@
-# Yaad: one memory, every channel
+# Meera: one memory, every channel
 
 IndiaMART Voice AI Hackathon 2.0 · PS02 *Global Context: Memory Across Channels*
 
@@ -6,7 +6,7 @@ IndiaMART Voice AI Hackathon 2.0 · PS02 *Global Context: Memory Across Channels
 never get a seller reply, and 42% of VANI bot calls end "Not Interested", partly because the bot opens with a pitch
 instead of what the person actually needs.
 
-**What Yaad does.** For every customer (keyed by GLID) Yaad keeps a short Markdown file, `buyer.md` or `seller.md`,
+**What Meera does.** For every customer (keyed by GLID) Meera keeps a short Markdown file, `buyer.md` or `seller.md`,
 built from every channel: enquiries, buyer calls, buy-leads, WhatsApp, VANI calls, executive calls and our own
 conversations. The file is organised around **unfinished work** ("open threads"): the buyer's requirement nobody
 answered, the seller's unread enquiries, the callback someone promised. The bot reads it before it speaks, opens with
@@ -71,4 +71,4 @@ cp .env.example .env            # add SARVAM_API_KEY (+ org/workspace ids for th
 .venv/bin/python -m pytest -q tests
 ```
 
-Sarvam agent: **Yaad IndiaMART Memory Assistant** (`Yaad-IndiaM-61a96599-5c50`) on indus.sarvam.ai.
+Sarvam agent: **Meera IndiaMART Memory Assistant** (`Yaad-IndiaM-61a96599-5c50`) on indus.sarvam.ai.

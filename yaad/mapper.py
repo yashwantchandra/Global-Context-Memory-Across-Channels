@@ -80,6 +80,9 @@ def resolve(ev, product_hint=None):
     # 4. counterparty seen recently on a thread
     cp = ev.get("counterparty")
     if cp:
+        for t in mine:  # the counterparty is already one of this thread's sellers
+            if any(s.get("id") == cp for s in t["sellers"]):
+                return {**_result(t, "counterparty", "medium"), "mcat_id": t["mcat_id"]}
         for t in mine:
             seen = [e for e in db.events(ev["glid"], ev["role"]) if e["thread_id"] == t["thread_id"]
                     and e["counterparty"] == cp and _days(e["ts"], ts) <= config.COUNTERPARTY_DAYS]

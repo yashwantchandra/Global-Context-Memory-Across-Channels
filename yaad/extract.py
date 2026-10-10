@@ -16,6 +16,7 @@ CONV_SCHEMA = {
         "product": S,
         "qty": {**S, "description": "the latest quantity the customer stated, in digits, e.g. '400 pcs' (convert Hindi number words like 'chaar sau' to digits)"},
         "spec": {**S, "description": "size/grade/material stated, e.g. '2 inch, medium class'"}, "price": S,
+        "deadline": {**S, "description": "when the customer needs it, exactly as stated, e.g. 'before Diwali', 'by 20 Oct'; else null"},
         "next_step": {**S, "description": "concrete promise or pending action, <=12 words, English; null if none"},
         "next_step_hinglish": {**S, "description": "same next step in natural Roman Hinglish, <=12 words, as the bot would say it to the customer; null if none"},
         "callback_date": S,
@@ -87,7 +88,7 @@ def _qty(text):
 
 
 COMPLAINT = re.compile(r"(fraud|froud|dhokha|cheat|scam|advance le|paise le|paisa le|maal nahi|nahi bheja|nahi aaya|"
-                       r"refund|paisa wapas|paise wapas|complaint|shikayat|damaged|kharab maal|धोखा|फ्रॉड|माल नहीं)", re.I)
+                       r"refund|paisa wapas|paise wapas|complaint|shikayat|damaged|kharab|quality issue|धोखा|फ्रॉड|माल नहीं)", re.I)
 
 
 def _complaint(turns):
